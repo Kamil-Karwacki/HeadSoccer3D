@@ -52,6 +52,7 @@ public:
     Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures);
     ~Mesh();
 
+    static Mesh createBox(const glm::vec3& size, const glm::vec3& color);
     void draw(Shader& shader, unsigned int whiteTextureID);
 private:
     unsigned int m_VAO, m_VBO, m_EBO;

@@ -10,6 +10,11 @@ Model::Model(const std::string& path)
     loadModel(path);
 }
 
+Model::Model(Mesh mesh)
+{
+    m_meshes.push_back(mesh);
+}
+
 void Model::draw(Shader& shader, unsigned int whiteTextureID)
 {
     for(unsigned int i = 0; i < m_meshes.size(); i++)

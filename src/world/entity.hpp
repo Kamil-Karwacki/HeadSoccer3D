@@ -18,7 +18,7 @@ public:
     {
         auto newComponent = std::make_unique<T>(std::forward<Args>(args)...);
         
-        newComponent->entity = this;
+        newComponent->m_entity = this;
         
         T* rawPointer = newComponent.get();
         

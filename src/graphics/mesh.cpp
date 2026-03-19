@@ -88,3 +88,66 @@ void Mesh::draw(Shader& shader, unsigned int whiteTextureID)
     glDrawElements(GL_TRIANGLES, m_indices.size(), GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
 }
+
+Mesh Mesh::createBox(const glm::vec3& size, const glm::vec3& color)
+{
+    Mesh mesh;
+    
+    glm::vec3 half = size * 0.5f;
+    float w = half.x;
+    float h = half.y;
+    float d = half.z;
+
+    // 24 Vertices: Position, Normal, Texture Coordinate
+    mesh.m_vertices = 
+    {
+        // Front face (+Z)
+        {{-w, -h,  d}, { 0.0f,  0.0f,  1.0f}, {0.0f, 0.0f}, color},
+        {{ w, -h,  d}, { 0.0f,  0.0f,  1.0f}, {1.0f, 0.0f}, color},
+        {{ w,  h,  d}, { 0.0f,  0.0f,  1.0f}, {1.0f, 1.0f}, color},
+        {{-w,  h,  d}, { 0.0f,  0.0f,  1.0f}, {0.0f, 1.0f}, color},
+
+        // Back face (-Z)
+        {{ w, -h, -d}, { 0.0f,  0.0f, -1.0f}, {0.0f, 0.0f}, color},
+        {{-w, -h, -d}, { 0.0f,  0.0f, -1.0f}, {1.0f, 0.0f}, color},
+        {{-w,  h, -d}, { 0.0f,  0.0f, -1.0f}, {1.0f, 1.0f}, color},
+        {{ w,  h, -d}, { 0.0f,  0.0f, -1.0f}, {0.0f, 1.0f}, color},
+
+        // Left face (-X)
+        {{-w, -h, -d}, {-1.0f,  0.0f,  0.0f}, {0.0f, 0.0f}, color},
+        {{-w, -h,  d}, {-1.0f,  0.0f,  0.0f}, {1.0f, 0.0f}, color},
+        {{-w,  h,  d}, {-1.0f,  0.0f,  0.0f}, {1.0f, 1.0f}, color},
+        {{-w,  h, -d}, {-1.0f,  0.0f,  0.0f}, {0.0f, 1.0f}, color},
+
+        // Right face (+X)
+        {{ w, -h,  d}, { 1.0f,  0.0f,  0.0f}, {0.0f, 0.0f}, color},
+        {{ w, -h, -d}, { 1.0f,  0.0f,  0.0f}, {1.0f, 0.0f}, color},
+        {{ w,  h, -d}, { 1.0f,  0.0f,  0.0f}, {1.0f, 1.0f}, color},
+        {{ w,  h,  d}, { 1.0f,  0.0f,  0.0f}, {0.0f, 1.0f}, color},
+
+        // Top face (+Y)
+        {{-w,  h,  d}, { 0.0f,  1.0f,  0.0f}, {0.0f, 0.0f}, color},
+        {{ w,  h,  d}, { 0.0f,  1.0f,  0.0f}, {1.0f, 0.0f}, color},
+        {{ w,  h, -d}, { 0.0f,  1.0f,  0.0f}, {1.0f, 1.0f}, color},
+        {{-w,  h, -d}, { 0.0f,  1.0f,  0.0f}, {0.0f, 1.0f}, color},
+
+        // Bottom face (-Y)
+        {{-w, -h, -d}, { 0.0f, -1.0f,  0.0f}, {0.0f, 0.0f}, color},
+        {{ w, -h, -d}, { 0.0f, -1.0f,  0.0f}, {1.0f, 0.0f}, color},
+        {{ w, -h,  d}, { 0.0f, -1.0f,  0.0f}, {1.0f, 1.0f}, color},
+        {{-w, -h,  d}, { 0.0f, -1.0f,  0.0f}, {0.0f, 1.0f}, color}
+    };
+
+    mesh.m_indices = 
+    {
+         0,  1,  2,  2,  3,  0, // Front
+         4,  5,  6,  6,  7,  4, // Back
+         8,  9, 10, 10, 11,  8, // Left
+        12, 13, 14, 14, 15, 12, // Right
+        16, 17, 18, 18, 19, 16, // Top
+        20, 21, 22, 22, 23, 20  // Bottom
+    };
+
+    mesh.setupMesh();
+    return mesh;
+}

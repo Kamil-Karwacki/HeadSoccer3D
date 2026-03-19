@@ -13,5 +13,5 @@ public:
     
     virtual void onDestroy() {}
 
-    Entity* entity = nullptr;
+    Entity* m_entity = nullptr;
 };

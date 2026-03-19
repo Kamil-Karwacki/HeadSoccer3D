@@ -7,7 +7,6 @@
 class MeshRenderer : public Component
 {
 private:
-    Transform* m_transform = nullptr;
     std::shared_ptr<Model> m_mesh = nullptr;
 
 public:

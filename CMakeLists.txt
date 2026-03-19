@@ -65,6 +65,7 @@ target_sources(${PROJECT_NAME} PRIVATE
     src/graphics/model.cpp
     src/world/entity.cpp
     src/world/scene.cpp
+    src/world/components/transform.cpp
     src/world/components/playerController.cpp
     src/world/components/meshRenderer.cpp
 )

@@ -6,18 +6,17 @@
 
 void PlayerController::start()
 {
-    m_transform = entity->GetComponent<Transform>();
+    Transform* transform = m_entity->GetComponent<Transform>();
     
-    if (m_transform == nullptr)
-    {
-        std::cerr << "Warning: PlayerController requires transform component!\n";
-    }
-    
+    if (transform == nullptr)
+        std::cerr << "Error: PlayerController requires transform component!\n";
 }
 
 void PlayerController::update(float deltaTime)
 {
-    if (!m_transform)
+    Transform* transform = m_entity->GetComponent<Transform>();
+
+    if (!transform)
         return;
     
     float speed = 20.0f;
@@ -28,28 +27,36 @@ void PlayerController::update(float deltaTime)
     InputManager manager = app.GetInput();
     if (manager.isActionHeld("forward"))
     {
-        m_transform->m_position += m_front * deltaTime * speed;
+        transform->setPosition(transform->getPosition() + m_front * deltaTime * speed);
     }
     if (manager.isActionHeld("back"))
     {
-        m_transform->m_position -= m_front * deltaTime * speed;
+        transform->setPosition(transform->getPosition() - m_front * deltaTime * speed);
     }
     if (manager.isActionHeld("left"))
     {
-        m_transform->m_position -= glm::cross(m_front, up) * deltaTime * speed;
+        transform->setPosition(transform->getPosition() - glm::cross(m_front, up) * deltaTime * speed);
     }
     if (manager.isActionHeld("right"))
     {
-        m_transform->m_position += glm::cross(m_front, up) * deltaTime * speed;
+        transform->setPosition(transform->getPosition() + glm::cross(m_front, up) * deltaTime * speed);
     }
 
     float mouseDeltaX = static_cast<float>(manager.getMouseDeltaX());
     float mouseDeltaY = static_cast<float>(manager.getMouseDeltaY());
 
     float mouseSensitivity = 0.1f;
-    m_transform->m_rotation.x += mouseDeltaX * mouseSensitivity;
-    m_transform->m_rotation.y += mouseDeltaY * mouseSensitivity;
+    transform->setRotation(glm::vec3(
+        transform->getRotation().x + mouseDeltaX * mouseSensitivity,
+        transform->getRotation().y,
+        transform->getRotation().z
+    ));
 
+    transform->setRotation(glm::vec3(
+        transform->getRotation().x,
+        transform->getRotation().y + mouseDeltaY * mouseSensitivity,
+        transform->getRotation().z
+    ));
 
     std::shared_ptr<Shader> defaultShader = app.getShader("default");
 
@@ -57,7 +64,7 @@ void PlayerController::update(float deltaTime)
     static_cast<float>(app.getWindowWidth()) / static_cast<float>(app.getWindowHeight()), 0.1f, 100.0f);
     
     glm::mat4 view = glm::mat4(1.0f);
-    view = glm::translate(view, m_transform->m_position);
+    view = glm::translate(view, transform->getPosition());
     view = GetViewMatrix();
 
     defaultShader->setMat4("view", 1, GL_FALSE, &view[0][0]);
@@ -66,11 +73,16 @@ void PlayerController::update(float deltaTime)
 
 glm::mat4 PlayerController::GetViewMatrix()
 {
-    if (m_transform->m_rotation.y > 89.0f)  m_transform->m_rotation.y = 89.0f;
-    if (m_transform->m_rotation.y < -89.0f) m_transform->m_rotation.y = -89.0f;
+    Transform* transform = m_entity->GetComponent<Transform>();
 
-    float yawRads = glm::radians(m_transform->m_rotation.x);
-    float pitchRads = glm::radians(m_transform->m_rotation.y);
+    glm::vec3 rotation = transform->getRotation();
+
+    if (rotation.y > 89.0f) transform->setRotation(glm::vec3(rotation.x, 89.0f, rotation.z));
+    if (rotation.y < -89.0f) transform->setRotation(glm::vec3(rotation.x, -89.0f, rotation.z));
+
+    rotation = transform->getRotation();
+    float yawRads = glm::radians(rotation.x);
+    float pitchRads = glm::radians(rotation.y);
 
     m_front.x = cos(yawRads) * cos(pitchRads);
     m_front.y = sin(pitchRads);
@@ -80,5 +92,5 @@ glm::mat4 PlayerController::GetViewMatrix()
 
     glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
 
-    return glm::lookAt(m_transform->m_position, m_transform->m_position + m_front, up);
+    return glm::lookAt(transform->getPosition(), transform->getPosition() + m_front, up);
 }

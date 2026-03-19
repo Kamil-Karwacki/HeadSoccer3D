@@ -8,7 +8,6 @@
 class PlayerController : public Component
 {
 private:
-    Transform* m_transform = nullptr;
     glm::vec3 m_front;
 public:
     PlayerController() = default;

@@ -7,11 +7,10 @@ class Model
 {
 public:
     Model(const std::string& path);
+    Model(Mesh mesh);
     void draw(Shader& shader, unsigned int whiteTextureID);
 
 private:
     std::vector<Mesh> m_meshes;
-    std::vector<Texture> m_loadedTextures;
-
     void loadModel(const std::string& path);
 };
