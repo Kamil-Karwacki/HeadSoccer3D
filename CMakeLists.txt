@@ -68,6 +68,10 @@ target_sources(${PROJECT_NAME} PRIVATE
     src/world/components/transform.cpp
     src/world/components/playerController.cpp
     src/world/components/meshRenderer.cpp
+    src/world/components/rigidbody.cpp
+    src/world/components/collider.cpp
+    src/physics/contact.cpp
+    src/physics/physicsSystem.cpp
 )
 
 target_compile_options(${PROJECT_NAME} PRIVATE ${COMPILER_WARNINGS})

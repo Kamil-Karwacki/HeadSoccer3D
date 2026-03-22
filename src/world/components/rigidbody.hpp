@@ -6,12 +6,9 @@
 
 class Rigidbody : public Component
 {
-private:
-
 public:
-    float restitution;
-    float friction;
-    Rigidbody();
+    float m_restitution;
+    float m_friction;
 
     void start() override;
 };

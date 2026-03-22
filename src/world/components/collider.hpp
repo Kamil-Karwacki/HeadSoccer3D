@@ -7,6 +7,13 @@ class Collider : public Component
 {
 public:
     glm::mat4 m_offset = glm::mat4(1.0f);
+
+    virtual ~Collider() = default;
+
+    void calculateInternals();
+    const glm::mat4& getWorldTransform() const;
+    glm::vec3 getAxis(int index) const;    
+
     void start() override;
 
 private:

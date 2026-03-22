@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include "entity.hpp"
+#include "physics/physicsSystem.hpp"
 
 
 class Scene
@@ -14,4 +15,5 @@ public:
 
 private:
     std::vector<std::unique_ptr<Entity>> m_entities;
+    PhysicsSystem m_physicsSystem;
 };

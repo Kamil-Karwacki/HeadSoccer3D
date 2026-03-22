@@ -2,6 +2,7 @@
 #include "graphics/model.hpp"
 #include "components/meshRenderer.hpp"
 #include "components/playerController.hpp"
+#include "components/collider.hpp"
 
 void Scene::init()
 {
@@ -25,13 +26,16 @@ void Scene::init()
     Entity* box = new Entity();
     box->AddComponent<Transform>();
     box->AddComponent<MeshRenderer>(std::make_shared<Model>(Mesh::createBox(glm::vec3(55.0f, 1.0f, 54.0f), glm::vec3(0.2f, 0.5f, 0.2f))));
+    box->AddComponent<PlaneCollider>(glm::vec3(0.0f, 1.0f, 0.0f), 0.0f);
     m_entities.push_back(std::unique_ptr<Entity>(box));
 
     Entity* sphere = new Entity();
     sphere->AddComponent<Transform>();
     sphere->AddComponent<MeshRenderer>(std::make_shared<Model>(PROJECT_DIR "assets/models/sphere.obj"));
     sphere->GetComponent<Transform>()->setScale(glm::vec3(2.0f));
-    sphere->GetComponent<Transform>()->setPosition(glm::vec3(0.0f, 4.0f, 0.0f));
+    sphere->GetComponent<Transform>()->setPosition(glm::vec3(0.0f, 10.0f, 0.0f));
+    sphere->AddComponent<SphereCollider>(2.0f);
+    sphere->AddComponent<Rigidbody>();
     m_entities.push_back(std::unique_ptr<Entity>(sphere));
 
     std::cout << "Scene initialized successfully\n";
@@ -42,6 +46,7 @@ void Scene::update(float deltaTime)
     for (auto& entity : m_entities)
     {
         entity->update(deltaTime);
+        m_physicsSystem.generateContacts(m_entities);
     }
 }
 
