@@ -38,6 +38,14 @@ void Scene::init()
     sphere->AddComponent<Rigidbody>();
     m_entities.push_back(std::unique_ptr<Entity>(sphere));
 
+    Entity* boxTwo = new Entity();
+    boxTwo->AddComponent<Transform>();
+    boxTwo->AddComponent<MeshRenderer>(std::make_shared<Model>(Mesh::createBox(glm::vec3(5.0f, 5.0f, 5.0f), glm::vec3(0.8f, 0.2f, 0.2f))));
+    boxTwo->GetComponent<Transform>()->setPosition(glm::vec3(10.0f, 10.0f, 0.0f));
+    boxTwo->AddComponent<BoxCollider>(glm::vec3(2.5f, 2.5f, 2.5f));
+    boxTwo->AddComponent<Rigidbody>();
+    m_entities.push_back(std::unique_ptr<Entity>(boxTwo));
+
     std::cout << "Scene initialized successfully\n";
 }
 
