@@ -12,6 +12,7 @@ public:
     ~Scene() = default;
     virtual void init();
     void update(float deltaTime);
+    void fixedUpdate(float deltaTime);
     void draw();
 
     glm::mat4 getMainViewMatrix() const;

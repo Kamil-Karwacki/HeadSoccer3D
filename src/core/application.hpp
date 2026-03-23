@@ -30,7 +30,7 @@ private:
     std::unique_ptr<Window> m_window;
     std::unique_ptr<InputManager> m_inputManager;
 
-    float m_lastFrameTime = 0.0f;
+    double m_lastFrameTime = 0.0f;
 
     bool m_isRunning;
     static Application* s_Instance;

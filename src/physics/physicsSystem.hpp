@@ -13,6 +13,7 @@ public:
     bool boxAndHalfspaceSimple(const BoxCollider& box, const PlaneCollider& plane);
     bool boxAndHalfspace(const BoxCollider& box, const PlaneCollider& plane);
     void generateContacts(std::vector<std::unique_ptr<Entity>>& entities);
+    std::vector<Contact> getContacts() { return m_contacts; }
 private:
     std::vector<Contact> m_contacts;
 

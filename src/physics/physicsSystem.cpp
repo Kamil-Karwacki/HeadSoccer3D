@@ -3,6 +3,7 @@
 #include "world/components/transform.hpp"
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/norm.hpp>
+#include "core/debug.hpp"
 
 bool PhysicsSystem::sphereAndSphere(const SphereCollider& one, const SphereCollider& two)
 {
@@ -104,7 +105,7 @@ bool PhysicsSystem::boxAndSphere(const BoxCollider& box, const SphereCollider& s
     contact.m_body[1] = sphereBody;
     contact.m_restitution = (boxBody->m_restitution + sphereBody->m_restitution) * 0.5f;
     contact.m_friction = (boxBody->m_friction + sphereBody->m_friction) * 0.5f;
-
+    m_contacts.push_back(contact);
     return true;
 }
 
@@ -368,7 +369,7 @@ bool PhysicsSystem::boxAndHalfspaceSimple(const BoxCollider& box, const PlaneCol
 
 bool PhysicsSystem::boxAndHalfspace(const BoxCollider& box, const PlaneCollider& plane)
 {
-    if (boxAndHalfspaceSimple(box, plane)) return false;
+    if (!boxAndHalfspaceSimple(box, plane)) return false;
     static float mults[8][3] = {{1,1,1},{-1,1,1},{1,-1,1},{-1,-1,1},
                                {1,1,-1},{-1,1,-1},{1,-1,-1},{-1,-1,-1}};
 
@@ -419,10 +420,6 @@ void PhysicsSystem::generateContacts(std::vector<std::unique_ptr<Entity>>& entit
 
         if (!sphereA && !boxA && !planeA) continue;
 
-
-        PlaneCollider* plane = entities[i]->GetComponent<PlaneCollider>();
-        if (!plane) continue;
-        
         for (size_t j = i + 1; j < entities.size(); j++)
         {
             Entity* entityB = entities[j].get();
@@ -467,5 +464,10 @@ void PhysicsSystem::generateContacts(std::vector<std::unique_ptr<Entity>>& entit
         }
     }
     // collision detection
+    for (Contact& c : m_contacts)
+    {
+        Debug::addLine(c.m_contactPoint, c.m_contactPoint + c.m_contactNormal * 5.0f, glm::vec3(1.0f, 1.0f, 1.0f), 1.0f);
+    }
+    m_contacts.clear();
 }
 

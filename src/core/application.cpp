@@ -60,11 +60,18 @@ void Application::run()
     std::shared_ptr<Shader> defaultShader = getShader("default");
     std::shared_ptr<Shader> debugShader = Application::Get().getShader("lineDebug");
     
+    double accumulator = 0.0;
+    const double fixedDeltaTime = 1.0 / 60.0;
+
     while (m_isRunning)
     {
-        float currentFrameTime = static_cast<float>(glfwGetTime());
-        float deltaTime = currentFrameTime - m_lastFrameTime;
+        double currentFrameTime = glfwGetTime();
+        double deltaTime = currentFrameTime - m_lastFrameTime;
         m_lastFrameTime = currentFrameTime;
+
+        if (deltaTime > 0.25) deltaTime = 0.25;
+
+        accumulator += deltaTime;
 
         m_inputManager->update();
         glfwPollEvents();
@@ -72,8 +79,15 @@ void Application::run()
         glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        Debug::update(static_cast<float>(deltaTime));
+
         defaultShader->use();
-        m_activeScene->update(deltaTime);
+        m_activeScene->update(static_cast<float>(deltaTime));
+        while (accumulator >= fixedDeltaTime)
+        {
+            m_activeScene->fixedUpdate(static_cast<float>(fixedDeltaTime));
+            accumulator -= fixedDeltaTime;
+        }
         m_activeScene->draw();
         
         // Drawing debug lines.

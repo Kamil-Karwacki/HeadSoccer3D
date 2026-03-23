@@ -35,7 +35,7 @@ void Scene::init()
     sphere->AddComponent<Transform>();
     sphere->AddComponent<MeshRenderer>(std::make_shared<Model>(PROJECT_DIR "assets/models/sphere.obj"));
     sphere->GetComponent<Transform>()->setScale(glm::vec3(2.0f));
-    sphere->GetComponent<Transform>()->setPosition(glm::vec3(0.0f, 10.0f, 0.0f));
+    sphere->GetComponent<Transform>()->setPosition(glm::vec3(0.0f, 1.0f, 0.0f));
     sphere->AddComponent<SphereCollider>(2.0f);
     sphere->AddComponent<Rigidbody>();
     m_entities.push_back(std::unique_ptr<Entity>(sphere));
@@ -43,7 +43,7 @@ void Scene::init()
     Entity* boxTwo = new Entity();
     boxTwo->AddComponent<Transform>();
     boxTwo->AddComponent<MeshRenderer>(std::make_shared<Model>(Mesh::createBox(glm::vec3(5.0f, 5.0f, 5.0f), glm::vec3(0.8f, 0.2f, 0.2f))));
-    boxTwo->GetComponent<Transform>()->setPosition(glm::vec3(10.0f, 10.0f, 0.0f));
+    boxTwo->GetComponent<Transform>()->setPosition(glm::vec3(4.0f, 2.0f, 1.0f));
     boxTwo->AddComponent<BoxCollider>(glm::vec3(2.5f, 2.5f, 2.5f));
     boxTwo->AddComponent<Rigidbody>();
     m_entities.push_back(std::unique_ptr<Entity>(boxTwo));
@@ -58,9 +58,17 @@ void Scene::update(float deltaTime)
     for (auto& entity : m_entities)
     {
         entity->update(deltaTime);
+    }
+}
+
+void Scene::fixedUpdate(float deltaTime)
+{
+    for (auto& entity : m_entities)
+    {
         m_physicsSystem.generateContacts(m_entities);
     }
 }
+
 
 void Scene::draw()
 {
