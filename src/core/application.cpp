@@ -10,6 +10,7 @@
 #include "world/components/meshRenderer.hpp"
 #include "world/components/playerController.hpp"
 #include <iostream>
+#include "core/debug.hpp"
 
 Application* Application::s_Instance = nullptr;
 
@@ -26,6 +27,8 @@ Application::Application() : m_isRunning(true)
     m_inputManager->bindAction("left", GLFW_KEY_A);
     m_inputManager->bindAction("right", GLFW_KEY_D);
     loadShader("default", PROJECT_DIR "assets/shaders/default.vert", PROJECT_DIR "assets/shaders/default.frag");
+    loadShader("lineDebug", PROJECT_DIR "assets/shaders/lineDebug.vert", PROJECT_DIR "assets/shaders/lineDebug.frag");
+    Debug::init();
 }
 
 Application::~Application()
@@ -55,6 +58,7 @@ void Application::run()
     m_activeScene->init();
 
     std::shared_ptr<Shader> defaultShader = getShader("default");
+    std::shared_ptr<Shader> debugShader = Application::Get().getShader("lineDebug");
     
     while (m_isRunning)
     {
@@ -68,8 +72,15 @@ void Application::run()
         glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        defaultShader->use();
         m_activeScene->update(deltaTime);
         m_activeScene->draw();
+        
+        // Drawing debug lines.
+        debugShader->use();
+        debugShader->setMat4("view", 1, GL_FALSE, &m_activeScene->getMainViewMatrix()[0][0]);
+        debugShader->setMat4("projection", 1, GL_FALSE, &m_activeScene->getMainProjectionMatrix()[0][0]);
+        Debug::render(*debugShader);
 
         if (m_window->ShouldClose())
         {

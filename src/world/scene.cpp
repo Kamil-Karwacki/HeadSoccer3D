@@ -3,6 +3,8 @@
 #include "components/meshRenderer.hpp"
 #include "components/playerController.hpp"
 #include "components/collider.hpp"
+#include "core/application.hpp"
+#include "core/debug.hpp"
 
 void Scene::init()
 {
@@ -46,6 +48,8 @@ void Scene::init()
     boxTwo->AddComponent<Rigidbody>();
     m_entities.push_back(std::unique_ptr<Entity>(boxTwo));
 
+    m_mainPlayer = player->GetComponent<PlayerController>();
+
     std::cout << "Scene initialized successfully\n";
 }
 
@@ -64,4 +68,14 @@ void Scene::draw()
     {
         entity->draw();
     }
+}
+
+glm::mat4 Scene::getMainViewMatrix() const 
+{
+    return m_mainPlayer ? m_mainPlayer->getViewMatrix() : glm::mat4(1.0f); 
+}
+
+glm::mat4 Scene::getMainProjectionMatrix() const
+{
+    return m_mainPlayer ? m_mainPlayer->getProjectionMatrix() : glm::mat4(1.0f);
 }

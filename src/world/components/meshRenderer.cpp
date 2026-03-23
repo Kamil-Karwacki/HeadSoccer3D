@@ -7,25 +7,23 @@ void MeshRenderer::start()
 {
     Transform* transform = m_entity->GetComponent<Transform>();
     
-    if (transform == nullptr)
+    if (!transform)
         std::cerr << "Error: MeshRenderer requires transform component!\n";
 
-    if (m_mesh == nullptr)
+    if (!m_model)
         std::cerr << "Error: MeshRenderer requiers model!\n";
 }
 
 void MeshRenderer::draw()
 {
     Transform* transform = m_entity->GetComponent<Transform>();
-    if (!m_mesh || !transform)
+    if (!m_model || !transform)
         return;
 
     Application& app = Application::Get();    
     std::shared_ptr<Shader> shader = app.getShader("default");
     glm::mat4 model = transform->getModelMatrix();
-
-    shader.get()->use();
     shader->setMat4("model", 1, GL_FALSE, &model[0][0]);
 
-    m_mesh->draw(*shader.get(), app.getWhiteTexture());
+    m_model->draw(*shader.get(), app.getWhiteTexture());
 }

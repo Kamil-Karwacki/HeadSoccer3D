@@ -114,3 +114,8 @@ void Shader::setMat4(const std::string &name, GLsizei count, GLboolean transpose
 {
     glUniformMatrix4fv(glGetUniformLocation(id, name.c_str()), count, transpose, value);
 }
+
+void Shader::setVec3(const std::string &name, const glm::vec3 &vector) const
+{
+    glUniform3f(glGetUniformLocation(id, name.c_str()), vector.x, vector.y, vector.z);
+}

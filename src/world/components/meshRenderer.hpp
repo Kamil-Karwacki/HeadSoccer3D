@@ -7,10 +7,10 @@
 class MeshRenderer : public Component
 {
 private:
-    std::shared_ptr<Model> m_mesh = nullptr;
+    std::shared_ptr<Model> m_model = nullptr;
 
 public:
-    MeshRenderer(std::shared_ptr<Model> mesh) : m_mesh(mesh) { }
+    MeshRenderer(std::shared_ptr<Model> mesh) : m_model(mesh) { }
 
     void start() override;
     void draw() override;

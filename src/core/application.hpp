@@ -25,6 +25,7 @@ public:
     void loadShader(const std::string& name, const char* vertexPath, const char* fragmentPath);
     std::shared_ptr<Shader> getShader(const std::string& name);
     unsigned int getWhiteTexture() { return whiteTexture; }
+
 private:
     std::unique_ptr<Window> m_window;
     std::unique_ptr<InputManager> m_inputManager;
