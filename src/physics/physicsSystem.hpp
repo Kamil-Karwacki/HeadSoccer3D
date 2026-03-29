@@ -21,8 +21,8 @@ private:
     std::vector<Contact> m_contacts;
     float m_positionEpsilon = 0.01f;
     float m_velocityEpsilon = 0.01f;
-    unsigned int m_positionIterations = 1;
-    unsigned int m_velocityIterations = 1;
+    unsigned int m_positionIterations = 4;
+    unsigned int m_velocityIterations = 4;
     /// @brief Casts box onto an axis.
     /// @param box box
     /// @param axis axis

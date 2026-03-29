@@ -13,6 +13,8 @@ void Scene::init()
     Entity* player = new Entity();
     player->AddComponent<Transform>();
     player->AddComponent<PlayerController>();
+    Transform* playerTransform = player->GetComponent<Transform>();
+    playerTransform->setPosition(glm::vec3(0, 3, 20));
     
     Entity* tempObject = new Entity();
     tempObject->AddComponent<Transform>();
@@ -31,30 +33,33 @@ void Scene::init()
     box->AddComponent<PlaneCollider>(glm::vec3(0.0f, 1.0f, 0.0f), 0.0f);
     m_entities.push_back(std::unique_ptr<Entity>(box));
 
-    Entity* sphere = new Entity();
+    /*Entity* sphere = new Entity();
     sphere->AddComponent<Transform>();
     sphere->AddComponent<MeshRenderer>(std::make_shared<Model>(PROJECT_DIR "assets/models/sphere.obj"));
     sphere->GetComponent<Transform>()->setScale(glm::vec3(2.0f));
-    sphere->GetComponent<Transform>()->setPosition(glm::vec3(0.0f, 12.0f, 0.0f));
+    sphere->GetComponent<Transform>()->setPosition(glm::vec3(0.0f, 22.0f, 0.0f));
     sphere->AddComponent<SphereCollider>(2.0f);
     sphere->AddComponent<Rigidbody>();
-    m_entities.push_back(std::unique_ptr<Entity>(sphere));
+    m_entities.push_back(std::unique_ptr<Entity>(sphere));*/
 
-    Entity* sphere2 = new Entity();
+    /*Entity* sphere2 = new Entity();
     sphere2->AddComponent<Transform>();
     sphere2->AddComponent<MeshRenderer>(std::make_shared<Model>(PROJECT_DIR "assets/models/sphere.obj"));
     sphere2->GetComponent<Transform>()->setScale(glm::vec3(2.0f));
     sphere2->GetComponent<Transform>()->setPosition(glm::vec3(1.0f, 3.0f, 0.0f));
     sphere2->AddComponent<SphereCollider>(2.0f);
     sphere2->AddComponent<Rigidbody>();
-    m_entities.push_back(std::unique_ptr<Entity>(sphere2));
-   /* Entity* boxTwo = new Entity();
+    m_entities.push_back(std::unique_ptr<Entity>(sphere2));*/
+    Entity* boxTwo = new Entity();
     boxTwo->AddComponent<Transform>();
     boxTwo->AddComponent<MeshRenderer>(std::make_shared<Model>(Mesh::createBox(glm::vec3(5.0f, 5.0f, 5.0f), glm::vec3(0.8f, 0.2f, 0.2f))));
-    boxTwo->GetComponent<Transform>()->setPosition(glm::vec3(4.0f, 2.0f, 1.0f));
+    boxTwo->GetComponent<Transform>()->setPosition(glm::vec3(4.0f, 6.0f, 1.0f));
+    boxTwo->GetComponent<Transform>()->setRotation(glm::vec3(3));
     boxTwo->AddComponent<BoxCollider>(glm::vec3(2.5f, 2.5f, 2.5f));
-    boxTwo->AddComponent<Rigidbody>();
-    m_entities.push_back(std::unique_ptr<Entity>(boxTwo));*/
+    boxTwo->AddComponent<Rigidbody>(10.0f, 0.3f, 0.0f);
+    Rigidbody* boxRb = boxTwo->GetComponent<Rigidbody>();
+    boxRb->setInverseInertiaTensor(Rigidbody::createBoxInverseInertiaTensor(boxRb->getMass(), 5.0f, 5.0f, 5.0f));
+    m_entities.push_back(std::unique_ptr<Entity>(boxTwo));
 
     m_mainPlayer = player->GetComponent<PlayerController>();
 
@@ -78,7 +83,7 @@ void Scene::fixedUpdate(float deltaTime)
         if(rb)
         {
             rb->integrate(deltaTime);
-            rb->addForce(glm::vec3(0.0f,-1.0f,0.0f) * 350.0f * deltaTime);
+            rb->addForce(glm::vec3(0.0f,-1.0f,0.0f) * 350.0f * rb->getMass() * deltaTime);
         }
         m_physicsSystem.generateContacts(m_entities);
         m_physicsSystem.resolveContacts(deltaTime);

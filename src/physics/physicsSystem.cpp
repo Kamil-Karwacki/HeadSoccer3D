@@ -63,9 +63,7 @@ bool PhysicsSystem::sphereAndHalfspace(const SphereCollider& sphere, const Plane
 bool PhysicsSystem::boxAndSphere(const BoxCollider& box, const SphereCollider& sphere)
 {
     glm::vec3 sphereCenter = sphere.getAxis(3);
-    glm::vec3 boxPos = box.getAxis(3);
-    glm::mat3 boxRot = glm::mat3(box.getWorldTransform());
-    glm::vec3 relCenter = (sphereCenter - boxPos) * glm::transpose(boxRot);
+    glm::vec3 relCenter = glm::vec3(glm::inverse(box.getWorldTransform()) * glm::vec4(sphereCenter, 1.0f));
 
     if (abs(relCenter.x) - sphere.m_radius > box.m_halfSize.x ||
         abs(relCenter.y) - sphere.m_radius > box.m_halfSize.y ||
@@ -390,15 +388,15 @@ bool PhysicsSystem::boxAndHalfspace(const BoxCollider& box, const PlaneCollider&
         if (vertexDistance <= plane.m_offset)
         {
             Contact contact;
-            contact.m_contactPoint = plane.m_normal * (vertexDistance - plane.m_offset) + vertexPos;
+            contact.m_contactPoint = vertexPos; 
             contact.m_contactNormal = plane.m_normal;
             contact.m_penetration = plane.m_offset - vertexDistance;
             Rigidbody* boxBody = box.m_entity->GetComponent<Rigidbody>();
 
             contact.m_body[0] = boxBody;
             contact.m_body[1] = nullptr;
-            contact.m_restitution = boxBody->m_restitution * 0.5f;
-            contact.m_friction = boxBody->m_friction * 0.5f;
+            contact.m_restitution = boxBody->m_restitution;
+            contact.m_friction = boxBody->m_friction;
             m_contacts.push_back(contact);
         }
     }
@@ -492,11 +490,8 @@ void PhysicsSystem::resolveContacts(float deltaTime)
     
     adjustPositions();
 
-   adjustVelocities(deltaTime);
-    //adjustVelocities(deltaTime);
-    // prepareContacts() -> calculate internals
-    // adjust position()
-    // adjust velocities()
+    adjustVelocities(deltaTime);
+
     m_contacts.clear();
 }
 
@@ -585,7 +580,7 @@ void PhysicsSystem::adjustVelocities(float deltaTime)
                             rotationChange[d], m_contacts[i].m_relativeContactPosition[b]);
 
                         m_contacts[i].m_contactVelocity +=
-                            m_contacts[i].m_contactToWorld * deltaVel * (b ? -1.0f : 1.0f);
+                            glm::transpose(m_contacts[i].m_contactToWorld) * deltaVel * (b ? -1.0f : 1.0f);
                         m_contacts[i].calculateDesiredDeltaVelocity(deltaTime);
                     }
                 }

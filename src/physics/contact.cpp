@@ -189,7 +189,7 @@ void Contact::applyVelocityChange(glm::vec3 velocityChange[2], glm::vec3 rotatio
     velocityChange[0] += impulse * m_body[0]->getInverseMass();
 
     m_body[0]->addVelocity(velocityChange[0]);
-    m_body[0]->addAngularVelocity(rotationChange[1]);
+    m_body[0]->addAngularVelocity(rotationChange[0]);
 
     if (m_body[1])
     {

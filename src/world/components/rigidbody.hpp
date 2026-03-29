@@ -7,8 +7,11 @@
 class Rigidbody : public Component
 {
 public:
-    float m_restitution = 0.35f;
-    float m_friction = 0.0f;
+    Rigidbody(float mass, float restitution, float friction) : 
+        m_restitution(restitution), m_friction(friction), m_inverseMass(1.0f / mass) {}
+        
+    float m_restitution;
+    float m_friction;
 
     float m_linearDamping = 0.99f;
     float m_angularDamping = 0.99f;
@@ -34,12 +37,15 @@ public:
     void setAngularVelocity(glm::vec3 velocity) { m_angularVelocity = velocity; }
     
     void setInertiaTensor(const glm::mat3& matrix) { m_inverseInertiaTensor = glm::inverse(matrix); }
+    void setInverseInertiaTensor(const glm::mat3& matrix) { m_inverseInertiaTensor = matrix; }
+    static glm::mat3 createBoxInverseInertiaTensor(float mass, float dx, float dy, float dz);
+
     glm::mat3 getLocalInertiaTensor() { return m_inverseInertiaTensor; }
     glm::mat3 getWorldInertiaTensor() { return m_inverseInertiaTensorWorld; }
-
+    
     glm::vec3 getLastFrameAcceleration() { return m_lastFrameAcc; }
 private:
-    float m_inverseMass = 1.0f;
+    float m_inverseMass;
     glm::mat3 m_inverseInertiaTensor = glm::mat3(1.0f);
     glm::mat3 m_inverseInertiaTensorWorld = glm::mat3(1.0f);
 
