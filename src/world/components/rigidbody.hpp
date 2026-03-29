@@ -38,7 +38,9 @@ public:
     
     void setInertiaTensor(const glm::mat3& matrix) { m_inverseInertiaTensor = glm::inverse(matrix); }
     void setInverseInertiaTensor(const glm::mat3& matrix) { m_inverseInertiaTensor = matrix; }
+
     static glm::mat3 createBoxInverseInertiaTensor(float mass, float dx, float dy, float dz);
+    static glm::mat3 createSphereInverseInertiaTensor(float mass, float radius);
 
     glm::mat3 getLocalInertiaTensor() { return m_inverseInertiaTensor; }
     glm::mat3 getWorldInertiaTensor() { return m_inverseInertiaTensorWorld; }

@@ -96,9 +96,26 @@ bool PhysicsSystem::boxAndSphere(const BoxCollider& box, const SphereCollider& s
     glm::vec3 closestPtWorld = glm::vec3(box.getWorldTransform() * glm::vec4(closestPoint, 1.0f));
 
     Contact contact;
-    contact.m_contactNormal = glm::normalize(sphereCenter - closestPtWorld);
+    
+    // Precaution when spheres center would be inside box (NaN)
+    if (distance * distance < 0.0001f)
+    {
+        glm::vec3 boxCenter = glm::vec3(box.getWorldTransform()[3]);
+
+        contact.m_contactNormal = glm::normalize(sphereCenter - boxCenter);
+
+        if (glm::any(glm::isnan(contact.m_contactNormal)))
+        {
+            contact.m_contactNormal = glm::vec3(0.0f, 1.0f, 0.0f);   
+        }
+        contact.m_penetration = sphere.m_radius;
+    }
+    else
+    {
+        contact.m_contactNormal = glm::normalize(closestPtWorld - sphereCenter);
+        contact.m_penetration = sphere.m_radius - sqrt(distance);
+    }
     contact.m_contactPoint = closestPtWorld;
-    contact.m_penetration = sphere.m_radius - sqrt(distance);
 
     Rigidbody* boxBody = box.m_entity->GetComponent<Rigidbody>();
     Rigidbody* sphereBody = sphere.m_entity->GetComponent<Rigidbody>();
@@ -471,10 +488,9 @@ void PhysicsSystem::generateContacts(std::vector<std::unique_ptr<Entity>>& entit
         }
     }
 
-    // collision resolution
     for (Contact& c : m_contacts)
     {
-        Debug::addLine(c.m_contactPoint, c.m_contactPoint + c.m_contactNormal * 5.0f, glm::vec3(1.0f, 1.0f, 1.0f), 1.0f);
+        Debug::addLine(c.m_contactPoint, c.m_contactPoint + c.m_contactNormal * 5.0f, glm::vec3(1.0f, 1.0f, 1.0f), 0.1f);
     }
 }
 

@@ -53,3 +53,18 @@ glm::mat3 Rigidbody::createBoxInverseInertiaTensor(float mass, float dx, float d
 
     return invInertia;
 }
+
+
+glm::mat3 Rigidbody::createSphereInverseInertiaTensor(float mass, float radius) {
+    if (mass <= 0.0f) return glm::mat3(0.0f);
+
+    float invI = 2.5f / (mass * radius * radius);
+
+    glm::mat3 invInertia(0.0f);
+    
+    invInertia[0][0] = invI;
+    invInertia[1][1] = invI;
+    invInertia[2][2] = invI;
+
+    return invInertia;
+}

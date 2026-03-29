@@ -33,14 +33,16 @@ void Scene::init()
     box->AddComponent<PlaneCollider>(glm::vec3(0.0f, 1.0f, 0.0f), 0.0f);
     m_entities.push_back(std::unique_ptr<Entity>(box));
 
-    /*Entity* sphere = new Entity();
+    Entity* sphere = new Entity();
     sphere->AddComponent<Transform>();
     sphere->AddComponent<MeshRenderer>(std::make_shared<Model>(PROJECT_DIR "assets/models/sphere.obj"));
     sphere->GetComponent<Transform>()->setScale(glm::vec3(2.0f));
     sphere->GetComponent<Transform>()->setPosition(glm::vec3(0.0f, 22.0f, 0.0f));
     sphere->AddComponent<SphereCollider>(2.0f);
-    sphere->AddComponent<Rigidbody>();
-    m_entities.push_back(std::unique_ptr<Entity>(sphere));*/
+    sphere->AddComponent<Rigidbody>(10.0f, 0.3f, 0.0f);
+    Rigidbody* sphereRb = sphere->GetComponent<Rigidbody>();
+    sphereRb->setInverseInertiaTensor(Rigidbody::createSphereInverseInertiaTensor(10.0f, 2.0f));
+    m_entities.push_back(std::unique_ptr<Entity>(sphere));
 
     /*Entity* sphere2 = new Entity();
     sphere2->AddComponent<Transform>();
@@ -48,7 +50,7 @@ void Scene::init()
     sphere2->GetComponent<Transform>()->setScale(glm::vec3(2.0f));
     sphere2->GetComponent<Transform>()->setPosition(glm::vec3(1.0f, 3.0f, 0.0f));
     sphere2->AddComponent<SphereCollider>(2.0f);
-    sphere2->AddComponent<Rigidbody>();
+    sphere2->AddComponent<Rigidbody>(10.0f, 0.3f, 0.0f);
     m_entities.push_back(std::unique_ptr<Entity>(sphere2));*/
     Entity* boxTwo = new Entity();
     boxTwo->AddComponent<Transform>();
