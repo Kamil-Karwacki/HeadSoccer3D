@@ -4,7 +4,7 @@ void Collider::start()
 {
     Transform* transform = m_entity->GetComponent<Transform>();
     
-    if (transform == nullptr)
+    if (!transform)
         std::cerr << "Warning: Collider requires transform component!\n";
 }
 

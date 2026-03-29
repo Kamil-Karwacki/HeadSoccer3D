@@ -15,6 +15,9 @@ public:
     glm::mat4 getViewMatrix();
     glm::mat4 getProjectionMatrix();
 private:
+    float m_yaw = 0.0f;
+    float m_pitch = 0.0f;
+
     glm::vec3 m_front;
     glm::mat4 m_projection;
 };

@@ -11,7 +11,7 @@ bool PhysicsSystem::sphereAndSphere(const SphereCollider& one, const SphereColli
     glm::vec3 positionTwo = two.getAxis(3);
 
     glm::vec3 midline = positionOne - positionTwo;
-    float size = midline.length();
+    float size = glm::length(midline);
 
     if (size <= 0.0f || size >= one.m_radius + two.m_radius)
         return false;
@@ -25,7 +25,7 @@ bool PhysicsSystem::sphereAndSphere(const SphereCollider& one, const SphereColli
 
     Rigidbody* rigidbody1 = one.m_entity->GetComponent<Rigidbody>();
     Rigidbody* rigidbody2 = two.m_entity->GetComponent<Rigidbody>();
-
+    
     contact.m_body[0] = rigidbody1;
     contact.m_body[1] = rigidbody2;
     contact.m_restitution = (rigidbody1->m_restitution + rigidbody2->m_restitution) * 0.5f;
@@ -34,11 +34,12 @@ bool PhysicsSystem::sphereAndSphere(const SphereCollider& one, const SphereColli
 
     return true;
 }
+
 bool PhysicsSystem::sphereAndHalfspace(const SphereCollider& sphere, const PlaneCollider& plane)
 {
     glm::vec3 position = sphere.getAxis(3);
 
-    float ballDistance = glm::dot(plane.m_normal,position) - sphere.m_radius - plane.m_offset;
+    float ballDistance = glm::dot(plane.m_normal, position) - sphere.m_radius - plane.m_offset;
 
     if (ballDistance >= 0) return false;
 
@@ -48,6 +49,8 @@ bool PhysicsSystem::sphereAndHalfspace(const SphereCollider& sphere, const Plane
     contact.m_contactPoint = position - plane.m_normal * (ballDistance + sphere.m_radius);
 
     Rigidbody* sphereBody = sphere.m_entity->GetComponent<Rigidbody>();
+
+
     contact.m_body[0] = sphereBody;
     contact.m_body[1] = nullptr;
     contact.m_restitution = sphereBody->m_restitution;
@@ -103,6 +106,7 @@ bool PhysicsSystem::boxAndSphere(const BoxCollider& box, const SphereCollider& s
     Rigidbody* sphereBody = sphere.m_entity->GetComponent<Rigidbody>();
     contact.m_body[0] = boxBody;
     contact.m_body[1] = sphereBody;
+
     contact.m_restitution = (boxBody->m_restitution + sphereBody->m_restitution) * 0.5f;
     contact.m_friction = (boxBody->m_friction + sphereBody->m_friction) * 0.5f;
     m_contacts.push_back(contact);
@@ -189,8 +193,6 @@ bool PhysicsSystem::boxAndBox(const BoxCollider& boxA, const BoxCollider& boxB)
     CHECK_OVERLAP(glm::cross(boxA.getAxis(2), boxB.getAxis(1)), 13);
     CHECK_OVERLAP(glm::cross(boxA.getAxis(2), boxB.getAxis(2)), 14);
 
-    assert(best != 0xffffff);
-
     if (best < 3)
     {
         // Box two's vertex is on a face of box one.
@@ -245,6 +247,8 @@ bool PhysicsSystem::boxAndBox(const BoxCollider& boxA, const BoxCollider& boxB)
         Rigidbody* bodyA = boxA.m_entity->GetComponent<Rigidbody>();
         Rigidbody* bodyB = boxB.m_entity->GetComponent<Rigidbody>();
 
+        contact.m_body[0] = bodyA;
+        contact.m_body[1] = bodyB;
         contact.m_friction = (bodyA->m_friction + bodyB->m_friction) * 0.5f;
         contact.m_restitution= (bodyA->m_restitution + bodyB->m_restitution) * 0.5f;
         m_contacts.push_back(contact);
@@ -354,6 +358,8 @@ void PhysicsSystem::fillPointFaceBoxBox(
     Rigidbody* bodyA = boxA.m_entity->GetComponent<Rigidbody>();
     Rigidbody* bodyB = boxB.m_entity->GetComponent<Rigidbody>();
 
+    contact.m_body[0] = bodyA;
+    contact.m_body[1] = bodyB;
     contact.m_friction = (bodyA->m_friction + bodyB->m_friction) * 0.5f;
     contact.m_restitution= (bodyA->m_restitution + bodyB->m_restitution) * 0.5f;
     m_contacts.push_back(contact);
@@ -389,6 +395,8 @@ bool PhysicsSystem::boxAndHalfspace(const BoxCollider& box, const PlaneCollider&
             contact.m_penetration = plane.m_offset - vertexDistance;
             Rigidbody* boxBody = box.m_entity->GetComponent<Rigidbody>();
 
+            contact.m_body[0] = boxBody;
+            contact.m_body[1] = nullptr;
             contact.m_restitution = boxBody->m_restitution * 0.5f;
             contact.m_friction = boxBody->m_friction * 0.5f;
             m_contacts.push_back(contact);
@@ -399,6 +407,9 @@ bool PhysicsSystem::boxAndHalfspace(const BoxCollider& box, const PlaneCollider&
 
 void PhysicsSystem::generateContacts(std::vector<std::unique_ptr<Entity>>& entities)
 {
+    m_contacts.clear();
+    if (entities.size() < 2) return;
+
     for (auto& entity : entities)
     {
         Collider* collider = entity->GetComponent<Collider>();
@@ -407,8 +418,6 @@ void PhysicsSystem::generateContacts(std::vector<std::unique_ptr<Entity>>& entit
             collider->calculateInternals();
         }
     }
-
-    if (entities.size() < 2) return;
 
     for (size_t i = 0; i < entities.size(); i++)
     {
@@ -463,11 +472,125 @@ void PhysicsSystem::generateContacts(std::vector<std::unique_ptr<Entity>>& entit
             }
         }
     }
-    // collision detection
+
+    // collision resolution
     for (Contact& c : m_contacts)
     {
         Debug::addLine(c.m_contactPoint, c.m_contactPoint + c.m_contactNormal * 5.0f, glm::vec3(1.0f, 1.0f, 1.0f), 1.0f);
     }
+}
+
+void PhysicsSystem::resolveContacts(float deltaTime)
+{
+    if (m_contacts.empty())
+        return;
+        
+    for (Contact& c : m_contacts)
+    {
+        c.calculateInternals(deltaTime);
+    }
+    
+    adjustPositions();
+
+   adjustVelocities(deltaTime);
+    //adjustVelocities(deltaTime);
+    // prepareContacts() -> calculate internals
+    // adjust position()
+    // adjust velocities()
     m_contacts.clear();
 }
 
+void PhysicsSystem::adjustPositions()
+{
+    unsigned int i, index;
+    glm::vec3 linearChange[2], angularChange[2];
+    float max;
+    glm::vec3 deltaPosition;
+
+    unsigned int positionIterationsUsed = 0;
+    size_t numContacts = m_contacts.size();
+    while (positionIterationsUsed < m_positionIterations)
+    {
+        max = m_positionEpsilon;
+        index = numContacts;
+        for (i = 0; i < numContacts; i++)
+        {
+            if (m_contacts[i].m_penetration > max)
+            {
+                max = m_contacts[i].m_penetration;
+                index = i;
+            }
+        }   
+        if (index == numContacts) break;
+
+        m_contacts[index].applyPositionChange(linearChange, angularChange, max);
+
+        for (i = 0; i < numContacts; i++)
+        {
+            for (size_t b = 0; b < 2; b++)
+            {
+                if (!m_contacts[i].m_body[b])
+                    continue;
+
+                for (size_t d = 0; d < 2; d++)
+                {
+                    if (m_contacts[i].m_body[b] == m_contacts[index].m_body[d])
+                    {
+                        deltaPosition = linearChange[d] +
+                            glm::dot(angularChange[d],  m_contacts[i].m_relativeContactPosition[b]);
+
+                        m_contacts[i].m_penetration +=
+                            glm::dot(deltaPosition, m_contacts[i].m_contactNormal) * (b ? 1.0f : -1.0f);
+                    }
+                }
+            }
+        }
+        positionIterationsUsed++;
+    }
+}
+
+void PhysicsSystem::adjustVelocities(float deltaTime)
+{
+    glm::vec3 velocityChange[2], rotationChange[2];
+    glm::vec3 deltaVel;
+    float numContacts = m_contacts.size();
+    size_t velocityIterationsUsed = 0;
+    while (velocityIterationsUsed < m_velocityIterations)
+    {
+        float max = m_velocityEpsilon;
+        size_t index = m_contacts.size();
+        for (size_t i = 0; i < numContacts; i++)
+        {
+            if (m_contacts[i].m_desiredDeltaVelocity > max)
+            {
+                max = m_contacts[i].m_desiredDeltaVelocity;
+                index = i;
+            }
+        }
+        if (index == numContacts) break;
+
+        m_contacts[index].applyVelocityChange(velocityChange, rotationChange);
+        for (size_t i = 0; i < numContacts; i++)
+        {
+            for (size_t b = 0; b < 2; b++)
+            {
+                if (!m_contacts[i].m_body[b])
+                    continue;
+
+                for (size_t d = 0; d < 2; d++)
+                {
+                    if (m_contacts[i].m_body[b] == m_contacts[index].m_body[d])
+                    {
+                        deltaVel = velocityChange[d] + glm::cross(
+                            rotationChange[d], m_contacts[i].m_relativeContactPosition[b]);
+
+                        m_contacts[i].m_contactVelocity +=
+                            m_contacts[i].m_contactToWorld * deltaVel * (b ? -1.0f : 1.0f);
+                        m_contacts[i].calculateDesiredDeltaVelocity(deltaTime);
+                    }
+                }
+            }
+        }
+        velocityIterationsUsed++;
+    }
+}

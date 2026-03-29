@@ -14,9 +14,15 @@ public:
     bool boxAndHalfspace(const BoxCollider& box, const PlaneCollider& plane);
     void generateContacts(std::vector<std::unique_ptr<Entity>>& entities);
     std::vector<Contact> getContacts() { return m_contacts; }
+    void resolveContacts(float deltaTime); 
+    void adjustPositions();
+    void adjustVelocities(float deltaTime);
 private:
     std::vector<Contact> m_contacts;
-
+    float m_positionEpsilon = 0.01f;
+    float m_velocityEpsilon = 0.01f;
+    unsigned int m_positionIterations = 1;
+    unsigned int m_velocityIterations = 1;
     /// @brief Casts box onto an axis.
     /// @param box box
     /// @param axis axis

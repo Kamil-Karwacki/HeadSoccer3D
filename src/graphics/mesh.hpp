@@ -48,9 +48,9 @@ public:
     std::vector<Vertex> m_vertices;
     std::vector<unsigned int> m_indices;
     std::vector<Texture> m_textures;
-    Mesh();
+    Mesh() = default;
     Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures);
-    ~Mesh();
+    ~Mesh() = default;
 
     static Mesh createBox(const glm::vec3& size, const glm::vec3& color);
     void draw(Shader& shader, unsigned int whiteTextureID);

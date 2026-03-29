@@ -13,23 +13,22 @@ void Rigidbody::start()
         std::cerr << "Error: Rigidbody requires collider component!\n";
 }
 
-void Rigidbody::update(float deltaTime)
+void Rigidbody::integrate(float deltaTime)
 {
     glm::vec3 acceleration = m_forceAccumulated * m_inverseMass;
     m_velocity += acceleration * deltaTime;
-
+    
     glm::vec3 angularAcceleration = m_torqueAccumulated * m_inverseInertiaTensor;
     m_angularVelocity += angularAcceleration * deltaTime;
 
     m_velocity *= pow(m_linearDamping, deltaTime);
     m_angularVelocity *= pow(m_angularDamping, deltaTime);
 
-    Transform* transform = m_entity->GetComponent<Transform>();
-    glm::vec3 oldPosition = transform->getPosition();
-    transform->setPosition(oldPosition + m_velocity * deltaTime);
+    m_lastFrameAcc = acceleration;
 
-    glm::vec3 oldRotation = transform->getRotation();
-    transform->setRotation(oldRotation + m_angularVelocity * deltaTime);
+    Transform* transform = m_entity->GetComponent<Transform>();
+    transform->addPosition(m_velocity * deltaTime);
+    transform->addRotation(m_angularVelocity * deltaTime);
 
     // Update inverse inertia tensor world due to objects rotation.
     glm::mat4 modelMatrix = transform->getModelMatrix();
