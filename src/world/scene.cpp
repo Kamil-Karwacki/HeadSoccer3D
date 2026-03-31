@@ -39,7 +39,7 @@ void Scene::init()
     sphere->GetComponent<Transform>()->setScale(glm::vec3(2.0f));
     sphere->GetComponent<Transform>()->setPosition(glm::vec3(0.0f, 22.0f, 0.0f));
     sphere->AddComponent<SphereCollider>(2.0f);
-    sphere->AddComponent<Rigidbody>(10.0f, 0.3f, 0.0f);
+    sphere->AddComponent<Rigidbody>(10.0f, 0.3f, 3.0f);
     Rigidbody* sphereRb = sphere->GetComponent<Rigidbody>();
     sphereRb->setInverseInertiaTensor(Rigidbody::createSphereInverseInertiaTensor(10.0f, 2.0f));
     m_entities.push_back(std::unique_ptr<Entity>(sphere));
@@ -58,7 +58,7 @@ void Scene::init()
     boxTwo->GetComponent<Transform>()->setPosition(glm::vec3(4.0f, 6.0f, 1.0f));
     boxTwo->GetComponent<Transform>()->setRotation(glm::vec3(3));
     boxTwo->AddComponent<BoxCollider>(glm::vec3(2.5f, 2.5f, 2.5f));
-    boxTwo->AddComponent<Rigidbody>(10.0f, 0.3f, 0.0f);
+    boxTwo->AddComponent<Rigidbody>(10.0f, 0.3f, 3.0f);
     Rigidbody* boxRb = boxTwo->GetComponent<Rigidbody>();
     boxRb->setInverseInertiaTensor(Rigidbody::createBoxInverseInertiaTensor(boxRb->getMass(), 5.0f, 5.0f, 5.0f));
     m_entities.push_back(std::unique_ptr<Entity>(boxTwo));
@@ -78,6 +78,7 @@ void Scene::update(float deltaTime)
 
 void Scene::fixedUpdate(float deltaTime)
 {
+    float gravity = 350.0f;
     for (auto& entity : m_entities)
     {
 
@@ -85,7 +86,7 @@ void Scene::fixedUpdate(float deltaTime)
         if(rb)
         {
             rb->integrate(deltaTime);
-            rb->addForce(glm::vec3(0.0f,-1.0f,0.0f) * 350.0f * rb->getMass() * deltaTime);
+            rb->addForce(glm::vec3(0.0f,-1.0f,0.0f) * gravity * rb->getMass() * deltaTime);
         }
         m_physicsSystem.generateContacts(m_entities);
         m_physicsSystem.resolveContacts(deltaTime);

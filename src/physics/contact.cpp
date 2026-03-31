@@ -232,5 +232,65 @@ glm::vec3 Contact::calculateFrictionlessImpulse()
 
 glm::vec3 Contact::calculateFrictionImpulse()
 {
-    return glm::vec3(0);
+    glm::vec3 impulseContact;
+    float inverseMass = m_body[0]->getInverseMass();
+
+    glm::mat3 impulseToTorque(
+        0.0f, m_relativeContactPosition[0].z, -m_relativeContactPosition[0].y,
+        -m_relativeContactPosition[0].z, 0.0f, m_relativeContactPosition[0].x,
+        m_relativeContactPosition[0].y, -m_relativeContactPosition[0].x, 0.0f
+    );
+
+    glm::mat3 deltaVelWorld = impulseToTorque;
+    deltaVelWorld *= m_body[0]->getWorldInertiaTensor();
+    deltaVelWorld *= impulseToTorque;
+    deltaVelWorld *= -1;
+
+    if (m_body[1])
+    {
+        inverseMass += m_body[1]->getInverseMass();
+
+        glm::mat3 impulseToTorque(
+            0.0f, m_relativeContactPosition[1].z, -m_relativeContactPosition[1].y,
+            -m_relativeContactPosition[1].z, 0.0f, m_relativeContactPosition[1].x,
+            m_relativeContactPosition[1].y, -m_relativeContactPosition[1].x, 0.0f
+        );
+
+        glm::mat3 deltaVelWorld2 = impulseToTorque;
+        deltaVelWorld2 *= m_body[1]->getWorldInertiaTensor();
+        deltaVelWorld2 *= impulseToTorque;
+        deltaVelWorld2 *= -1;
+
+        deltaVelWorld += deltaVelWorld2;
+    }
+
+    glm::mat3 deltaVelocity = glm::transpose(m_contactToWorld);
+    deltaVelocity *= deltaVelWorld;
+    deltaVelocity *= m_contactToWorld;
+
+    deltaVelocity[0][0] += inverseMass;
+    deltaVelocity[1][1] += inverseMass;
+    deltaVelocity[2][2] += inverseMass;
+
+    glm::mat3 impulseMatrix = glm::inverse(deltaVelocity);
+
+    glm::vec3 velKill(m_desiredDeltaVelocity, -m_contactVelocity.y, -m_contactVelocity.z);
+
+    impulseContact = impulseMatrix * velKill;
+
+    float planarImpulse = sqrt(impulseContact.y * impulseContact.y + impulseContact.z * impulseContact.z);
+
+    if (planarImpulse > impulseContact.x * m_friction)
+    {
+        impulseContact.y /= planarImpulse;
+        impulseContact.z /= planarImpulse;
+
+        impulseContact.x = deltaVelocity[0][0] +
+            deltaVelocity[1][0] * m_friction * impulseContact.y +
+            deltaVelocity[2][0] * m_friction * impulseContact.z;
+        impulseContact.x = m_desiredDeltaVelocity / impulseContact.x;
+        impulseContact.y *= m_friction * impulseContact.x;
+        impulseContact.z *= m_friction * impulseContact.x;
+    }
+    return impulseContact;
 }
