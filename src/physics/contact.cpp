@@ -7,7 +7,7 @@ void Contact::calculateContactBasis()
 {
     glm::vec3 contactTanget[2];
 
-    if (abs(m_contactNormal.x) > abs(m_contactNormal.y))
+    if (fabsf(m_contactNormal.x) > fabsf(m_contactNormal.y))
     {
         const float s = 1.0f / sqrt(m_contactNormal.z * m_contactNormal.z + 
             m_contactNormal.x * m_contactNormal.x);
@@ -66,7 +66,7 @@ void Contact::calculateDesiredDeltaVelocity(float deltaTime)
         velocityFromAcc -= glm::dot(m_body[1]->getLastFrameAcceleration(), m_contactNormal) * deltaTime;
 
     float thisRestitution = m_restitution;
-    if (abs(m_contactVelocity.x) < velocityLimit)
+    if (fabsf(m_contactVelocity.x) < velocityLimit)
     {
         thisRestitution = 0.0f;
     }

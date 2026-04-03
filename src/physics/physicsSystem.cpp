@@ -65,9 +65,9 @@ bool PhysicsSystem::boxAndSphere(const BoxCollider& box, const SphereCollider& s
     glm::vec3 sphereCenter = sphere.getAxis(3);
     glm::vec3 relCenter = glm::vec3(glm::inverse(box.getWorldTransform()) * glm::vec4(sphereCenter, 1.0f));
 
-    if (abs(relCenter.x) - sphere.m_radius > box.m_halfSize.x ||
-        abs(relCenter.y) - sphere.m_radius > box.m_halfSize.y ||
-        abs(relCenter.z) - sphere.m_radius > box.m_halfSize.z)
+    if (fabsf(relCenter.x) - sphere.m_radius > box.m_halfSize.x ||
+        fabsf(relCenter.y) - sphere.m_radius > box.m_halfSize.y ||
+        fabsf(relCenter.z) - sphere.m_radius > box.m_halfSize.z)
     {
         return false;   
     }
@@ -130,9 +130,9 @@ bool PhysicsSystem::boxAndSphere(const BoxCollider& box, const SphereCollider& s
 
 float PhysicsSystem::transformToAxis(const BoxCollider& box, const glm::vec3& axis)
 {
-    return box.m_halfSize.x * abs(glm::dot(axis, box.getAxis(0))) +
-           box.m_halfSize.y * abs(glm::dot(axis, box.getAxis(1))) +
-           box.m_halfSize.z * abs(glm::dot(axis, box.getAxis(2)));
+    return box.m_halfSize.x * fabsf(glm::dot(axis, box.getAxis(0))) +
+           box.m_halfSize.y * fabsf(glm::dot(axis, box.getAxis(1))) +
+           box.m_halfSize.z * fabsf(glm::dot(axis, box.getAxis(2)));
 }
 
 bool PhysicsSystem::boxAndPoint(const BoxCollider& box, const glm::vec3& point)
@@ -142,11 +142,11 @@ bool PhysicsSystem::boxAndPoint(const BoxCollider& box, const glm::vec3& point)
     glm::vec3 relativePoint = (point - boxPos) * glm::transpose(boxRot);
 
     glm::vec3 normal;
-    float minDepth = box.m_halfSize.x - abs(relativePoint.x);
+    float minDepth = box.m_halfSize.x - fabsf(relativePoint.x);
     if (minDepth < 0) return 0;
     normal = box.getAxis(0) * ((relativePoint.x < 0) ? -1.0f : 1.0f);    
 
-    float depth = box.m_halfSize.y - abs(relativePoint.y);
+    float depth = box.m_halfSize.y - fabsf(relativePoint.y);
     if (depth < 0) return 0;
     else if (depth < minDepth)
     {
@@ -154,7 +154,7 @@ bool PhysicsSystem::boxAndPoint(const BoxCollider& box, const glm::vec3& point)
         normal = box.getAxis(1) * ((relativePoint.y < 0) ? -1.0f : 1.0f);
     }
 
-    depth = box.m_halfSize.z - abs(relativePoint.z);
+    depth = box.m_halfSize.z - fabsf(relativePoint.z);
     if (depth < 0) return 0;
     else if (depth < minDepth)
     {
@@ -299,7 +299,7 @@ glm::vec3 PhysicsSystem::contactPoint(
     denom = smOne * smTwo - dpOneTwo * dpOneTwo;
 
     // Make sure that there is no divison by 0.
-    if (abs(denom) < 0.0001f) 
+    if (fabsf(denom) < 0.0001f) 
         return useOne ? pOne : pTwo;
 
     mua = (dpOneTwo * dpStaTwo - smTwo * dpStaOne) / denom;
@@ -345,7 +345,7 @@ float PhysicsSystem::penetrationOnAxis(const BoxCollider& boxA, const BoxCollide
     float oneProject = transformToAxis(boxA, axis);
     float twoProject = transformToAxis(boxB, axis);
 
-    float distance = abs(glm::dot(toCenter, axis));
+    float distance = fabsf(glm::dot(toCenter, axis));
 
     return oneProject + twoProject - distance;
 }
