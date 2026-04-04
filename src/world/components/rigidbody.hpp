@@ -7,14 +7,15 @@
 class Rigidbody : public Component
 {
 public:
-    Rigidbody(float mass, float restitution, float friction) : 
-        m_restitution(restitution), m_friction(friction), m_inverseMass(1.0f / mass) {}
+    Rigidbody(float mass, float restitution, float friction, float linearDamping, float angularDamping) : 
+        m_restitution(restitution), m_friction(friction), m_inverseMass(1.0f / mass), 
+        m_linearDamping(linearDamping), m_angularDamping(angularDamping) {}
         
     float m_restitution;
     float m_friction;
 
-    float m_linearDamping = 0.99f;
-    float m_angularDamping = 0.99f;
+    float m_linearDamping = 0.9f;
+    float m_angularDamping = 0.9f;
     
     void start() override;
     void integrate(float deltaTime);

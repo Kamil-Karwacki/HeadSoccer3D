@@ -7,8 +7,10 @@ void Contact::calculateContactBasis()
 {
     glm::vec3 contactTanget[2];
 
+    // Check which axis normal vector is farthest from, then use that axis in cross product
     if (fabsf(m_contactNormal.x) > fabsf(m_contactNormal.y))
     {
+        // Calculate inverse of length so result can be normalized.
         const float s = 1.0f / sqrt(m_contactNormal.z * m_contactNormal.z + 
             m_contactNormal.x * m_contactNormal.x);
 
@@ -23,7 +25,7 @@ void Contact::calculateContactBasis()
     }
     else
     {
-
+        // Calculate inverse of length so result can be normalized.
         const float s = 1.0f / sqrt(m_contactNormal.z * m_contactNormal.z + 
             m_contactNormal.y * m_contactNormal.y);
 
@@ -56,20 +58,18 @@ void Contact::calculateInternals(float deltaTime)
 
 void Contact::calculateDesiredDeltaVelocity(float deltaTime)
 {
-    const static float velocityLimit = 0.25f;    
+    static constexpr float velocityLimit = 0.25f;    
 
-    float velocityFromAcc = 0;
-
-    velocityFromAcc += glm::dot(m_body[0]->getLastFrameAcceleration(), m_contactNormal) * deltaTime;
+    float velocityFromAcc = glm::dot(m_body[0]->getLastFrameAcceleration(), m_contactNormal) * deltaTime;
 
     if(m_body[1])
         velocityFromAcc -= glm::dot(m_body[1]->getLastFrameAcceleration(), m_contactNormal) * deltaTime;
 
     float thisRestitution = m_restitution;
+
+    // Limit the restitution so that the objects dont jump infinitely.
     if (fabsf(m_contactVelocity.x) < velocityLimit)
-    {
         thisRestitution = 0.0f;
-    }
 
    m_desiredDeltaVelocity = -m_contactVelocity.x - thisRestitution * (m_contactVelocity.x - velocityFromAcc);
 }
@@ -78,7 +78,6 @@ glm::vec3 Contact::calculateLocalVelocity(unsigned int bodyIndex, float deltaTim
 {
     Rigidbody* body = m_body[bodyIndex];
 
-    Transform* transform = body->m_entity->GetComponent<Transform>();
     glm::vec3 velocity = glm::cross(body->getAngularVelocity(), m_relativeContactPosition[bodyIndex]);
     velocity += body->getVelocity();
 
@@ -95,7 +94,7 @@ glm::vec3 Contact::calculateLocalVelocity(unsigned int bodyIndex, float deltaTim
 
 void Contact::applyPositionChange(glm::vec3 linearChange[2], glm::vec3 angularChange[2], float penetration)
 {
-    const float angularLimit = 0.2f;
+    static constexpr float angularLimit = 0.2f;
     float angularMove[2];
     float linearMove[2];
 
@@ -158,8 +157,9 @@ void Contact::applyPositionChange(glm::vec3 linearChange[2], glm::vec3 angularCh
         }
 
         linearChange[i] = m_contactNormal * linearMove[i];
+
         Transform* transform = m_body[i]->m_entity->GetComponent<Transform>();
-        transform->addPosition(m_contactNormal * linearMove[i]);
+        transform->addPosition(linearChange[i]);
         transform->addRotation(angularChange[i]); 
     }
 }
@@ -185,8 +185,7 @@ void Contact::applyVelocityChange(glm::vec3 velocityChange[2], glm::vec3 rotatio
     glm::vec3 impulse = m_contactToWorld * impulseContact;
     glm::vec3 impulsiveTorque = glm::cross(m_relativeContactPosition[0], impulse);
     rotationChange[0] = inverseInertiaTensor[0] * impulsiveTorque;
-    velocityChange[0] = glm::vec3(0.0f);
-    velocityChange[0] += impulse * m_body[0]->getInverseMass();
+    velocityChange[0] = impulse * m_body[0]->getInverseMass();
 
     m_body[0]->addVelocity(velocityChange[0]);
     m_body[0]->addAngularVelocity(rotationChange[0]);
@@ -206,7 +205,7 @@ void Contact::applyVelocityChange(glm::vec3 velocityChange[2], glm::vec3 rotatio
 glm::vec3 Contact::calculateFrictionlessImpulse()
 {
     glm::vec3 deltaVelWorld = glm::cross(m_relativeContactPosition[0], m_contactNormal);
-    deltaVelWorld = deltaVelWorld * m_body[0]->getWorldInertiaTensor();  
+    deltaVelWorld = m_body[0]->getWorldInertiaTensor() * deltaVelWorld;
     deltaVelWorld = glm::cross(deltaVelWorld, m_relativeContactPosition[0]);
     
     float deltaVelocity = glm::dot(deltaVelWorld, m_contactNormal);
@@ -215,7 +214,7 @@ glm::vec3 Contact::calculateFrictionlessImpulse()
     if (m_body[1])
     {
         glm::vec3 deltaVelWorld = glm::cross(m_relativeContactPosition[1], m_contactNormal);
-        deltaVelWorld = deltaVelWorld * m_body[1]->getWorldInertiaTensor();
+        deltaVelWorld = m_body[1]->getWorldInertiaTensor() * deltaVelWorld;
         deltaVelWorld = glm::cross(deltaVelWorld, m_relativeContactPosition[1]);
 
         deltaVelocity += glm::dot(deltaVelWorld, m_contactNormal);
@@ -274,17 +273,21 @@ glm::vec3 Contact::calculateFrictionImpulse()
 
     glm::mat3 impulseMatrix = glm::inverse(deltaVelocity);
 
+    // This vector is used for static friction.
     glm::vec3 velKill(m_desiredDeltaVelocity, -m_contactVelocity.y, -m_contactVelocity.z);
 
     impulseContact = impulseMatrix * velKill;
 
     float planarImpulse = sqrt(impulseContact.y * impulseContact.y + impulseContact.z * impulseContact.z);
-
+    
+    // If the static friction is bigger than the normal force then it is a dynamic friction.
     if (planarImpulse > impulseContact.x * m_friction)
     {
+        // Limit friction
         impulseContact.y /= planarImpulse;
         impulseContact.z /= planarImpulse;
 
+        // Recalculate impulse in the normal direction.
         impulseContact.x = deltaVelocity[0][0] +
             deltaVelocity[1][0] * m_friction * impulseContact.y +
             deltaVelocity[2][0] * m_friction * impulseContact.z;

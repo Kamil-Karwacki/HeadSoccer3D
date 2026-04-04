@@ -5,18 +5,23 @@
 class PhysicsSystem
 {
 public:
-    bool sphereAndSphere(const SphereCollider& one, const SphereCollider& two);
-    bool sphereAndHalfspace(const SphereCollider& sphere, const PlaneCollider& plane);
-    bool boxAndSphere(const BoxCollider& box, const SphereCollider& sphere);
-    bool boxAndBox(const BoxCollider& boxA, const BoxCollider& boxB);
-    bool boxAndPoint(const BoxCollider& box, const glm::vec3& point);
+    bool sphereAndSphere(const SphereCollider& one, const SphereCollider& two, Rigidbody& rbA, Rigidbody& rbB);
+    bool sphereAndHalfspace(const SphereCollider& sphere, const PlaneCollider& plane, Rigidbody& rbA);
+    bool boxAndSphere(const BoxCollider& box, const SphereCollider& sphere, Rigidbody& rbA, Rigidbody& rbB);
+    bool boxAndBox(const BoxCollider& boxA, const BoxCollider& boxB, Rigidbody& rbA, Rigidbody& rbB);
     bool boxAndHalfspaceSimple(const BoxCollider& box, const PlaneCollider& plane);
-    bool boxAndHalfspace(const BoxCollider& box, const PlaneCollider& plane);
+    bool boxAndHalfspace(const BoxCollider& box, const PlaneCollider& plane, Rigidbody& rbA);
     void generateContacts(std::vector<std::unique_ptr<Entity>>& entities);
     std::vector<Contact> getContacts() { return m_contacts; }
     void resolveContacts(float deltaTime); 
+
+    /// @brief Handles position change in collision resolution loop.
     void adjustPositions();
+
+    /// @brief Handles velocity change in collision resolution loop.
+    /// @param deltaTime Time between simulation steps in seconds.
     void adjustVelocities(float deltaTime);
+
 private:
     std::vector<Contact> m_contacts;
     float m_positionEpsilon = 0.01f;
