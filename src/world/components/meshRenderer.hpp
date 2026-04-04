@@ -10,7 +10,9 @@ private:
     std::shared_ptr<Model> m_model = nullptr;
 
 public:
-    MeshRenderer(std::shared_ptr<Model> mesh) : m_model(mesh) { }
+    glm::vec3 m_offset;
+    MeshRenderer(std::shared_ptr<Model> mesh, glm::vec3 offset = {0, 0, 0}) : 
+    m_model(mesh), m_offset(offset) { }
 
     void start() override;
     void draw() override;

@@ -14,14 +14,6 @@ Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std:
     setupMesh();
 }
 
-Mesh::Mesh()
-{
-}
-
-Mesh::~Mesh()
-{
-}
-
 void Mesh::setupMesh()
 {
     glGenVertexArrays(1, &m_VAO);

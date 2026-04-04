@@ -22,7 +22,9 @@ void MeshRenderer::draw()
 
     Application& app = Application::Get();    
     std::shared_ptr<Shader> shader = app.getShader("default");
-    glm::mat4 model = transform->getModelMatrix();
+    glm::mat4 model = glm::mat4(1.0f);
+    model *= glm::translate(model, m_offset);
+    model *= transform->getModelMatrix();
     shader->setMat4("model", 1, GL_FALSE, &model[0][0]);
 
     m_model->draw(*shader.get(), app.getWhiteTexture());

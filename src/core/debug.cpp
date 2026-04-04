@@ -1,5 +1,6 @@
 #include "debug.hpp"
 #include <glad/glad.h>
+#include <algorithm>
 
 std::vector<Debug::DebugVertex> Debug::m_vertices;
 std::vector<Debug::DebugLine> Debug::m_lines;
