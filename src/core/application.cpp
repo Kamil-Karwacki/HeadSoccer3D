@@ -58,7 +58,7 @@ void Application::run()
     m_activeScene->init();
 
     std::shared_ptr<Shader> defaultShader = getShader("default");
-    std::shared_ptr<Shader> debugShader = Application::Get().getShader("lineDebug");
+    std::shared_ptr<Shader> debugShader = getShader("lineDebug");
     
     double accumulator = 0.0;
     const double fixedDeltaTime = 1.0 / 60.0;
@@ -90,7 +90,7 @@ void Application::run()
         }
         m_activeScene->draw();
         
-        // Drawing debug lines.
+        // Draw debug lines.
         debugShader->use();
         debugShader->setMat4("view", 1, GL_FALSE, &m_activeScene->getMainViewMatrix()[0][0]);
         debugShader->setMat4("projection", 1, GL_FALSE, &m_activeScene->getMainProjectionMatrix()[0][0]);

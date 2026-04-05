@@ -401,7 +401,7 @@ void PhysicsSystem::generateContacts(std::vector<std::unique_ptr<Entity>>& entit
 
             Rigidbody* rbB = entityB->GetComponent<Rigidbody>(); 
 
-            //if (!rbA && !rbB) continue;
+            if (!rbA && !rbB) continue;
 
             SphereCollider* sphereB = entityB->GetComponent<SphereCollider>();
             BoxCollider* boxB = entityB->GetComponent<BoxCollider>();
@@ -445,7 +445,7 @@ void PhysicsSystem::generateContacts(std::vector<std::unique_ptr<Entity>>& entit
 
     for (Contact& c : m_contacts)
     {
-        Debug::addLine(c.m_contactPoint, c.m_contactPoint + c.m_contactNormal * 5.0f, glm::vec3(1.0f, 1.0f, 1.0f), 1.2f);
+        Debug::addLine(c.m_contactPoint, c.m_contactPoint + c.m_contactNormal * 5.0f, glm::vec3(1.0f, 1.0f, 1.0f), 0.5f);
     }
 }
 

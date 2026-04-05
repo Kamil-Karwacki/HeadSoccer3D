@@ -12,7 +12,8 @@ void Scene::init()
 
     Entity* player = new Entity();
     player->AddComponent<Transform>();
-    player->AddComponent<PlayerController>();
+    m_mainPlayer = &player->AddComponent<PlayerController>(); 
+
     Transform* playerTransform = player->GetComponent<Transform>();
     playerTransform->setPosition(glm::vec3(0, 3, 20));
     
@@ -58,7 +59,7 @@ void Scene::init()
     boxTwo->GetComponent<Transform>()->setPosition(glm::vec3(4.0f, 6.0f, 1.0f));
     boxTwo->GetComponent<Transform>()->setRotation(glm::vec3(3));
     boxTwo->AddComponent<BoxCollider>(glm::vec3(2.5f, 2.5f, 2.5f));
-    boxTwo->AddComponent<Rigidbody>(10.0f, 0.3f, 3.0f, 0.9f, 0.9f);
+    boxTwo->AddComponent<Rigidbody>(10.0f, 0.3f, 3.0f, 0.5f, 0.5f);
     Rigidbody* boxRb = boxTwo->GetComponent<Rigidbody>();
     boxRb->setInverseInertiaTensor(Rigidbody::createBoxInverseInertiaTensor(boxRb->getMass(), 5.0f, 5.0f, 5.0f));
     m_entities.push_back(std::unique_ptr<Entity>(boxTwo));
@@ -76,7 +77,7 @@ void Scene::update(float deltaTime)
 
 void Scene::fixedUpdate(float deltaTime)
 {
-    float gravity = 350.0f;
+    static constexpr float gravity = 350.0f;
     for (auto& entity : m_entities)
     {
 

@@ -17,6 +17,7 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath)
     vShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
     fShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
 
+    std::cout << "Loading shaders at: " << vertexPath << " " << fragmentPath << "\n";
     try 
     {
         if (!fs::exists(vertexPath)) {
