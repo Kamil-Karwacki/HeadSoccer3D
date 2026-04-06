@@ -25,9 +25,9 @@ void Scene::fixedUpdate(float deltaTime)
         Rigidbody* rb = entity->GetComponent<Rigidbody>();
         if(rb)
         {
-            rb->integrate(deltaTime);
-            rb->addForce(glm::vec3(0.0f,-1.0f,0.0f) * gravity * rb->getMass() * deltaTime);
+            rb->m_forceAcc += glm::vec3(0.0f,-1.0f,0.0f) * gravity * (1.0f / rb->m_inverseMass) * deltaTime;
         }
+        m_physicsSystem.update(m_entities, deltaTime);
         m_physicsSystem.generateContacts(m_entities);
         m_physicsSystem.resolveContacts(deltaTime);
     }

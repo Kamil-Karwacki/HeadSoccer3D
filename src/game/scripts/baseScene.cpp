@@ -22,7 +22,7 @@ void BaseScene::init()
     player.AddComponent<PlayerController>();
     player.AddComponent<Rigidbody>(1.0f, 0.1f, 0.5f, 0.9f, 0.9f);
     player.AddComponent<SphereCollider>(2.0f);
-    player.GetComponent<Rigidbody>()->setInverseInertiaTensor(Rigidbody::createSphereInverseInertiaTensor(1.0f, 2.0f));
+    player.GetComponent<Rigidbody>()->m_invInertiaTensor = Rigidbody::createSphereInverseInertiaTensor(1.0f, 2.0f);
 
     Entity& cameraPlayer = createEntity();
     cameraPlayer.AddComponent<Transform>();
@@ -50,7 +50,7 @@ void BaseScene::init()
     sphere.AddComponent<SphereCollider>(2.0f);
     sphere.AddComponent<Rigidbody>(10.0f, 0.3f, 30.0f, 0.85f, 0.8f);
     Rigidbody* sphereRb = sphere.GetComponent<Rigidbody>();
-    sphereRb->setInverseInertiaTensor(Rigidbody::createSphereInverseInertiaTensor(10.0f, 2.0f));
+    sphereRb->m_invInertiaTensor = Rigidbody::createSphereInverseInertiaTensor(10.0f, 2.0f);
 
     /*Entity* sphere2 = new Entity();
     sphere2->AddComponent<Transform>();
@@ -68,7 +68,7 @@ void BaseScene::init()
     boxTwo.AddComponent<BoxCollider>(glm::vec3(2.5f, 2.5f, 2.5f));
     boxTwo.AddComponent<Rigidbody>(10.0f, 0.3f, 3.0f, 0.5f, 0.5f);
     Rigidbody* boxRb = boxTwo.GetComponent<Rigidbody>();
-    boxRb->setInverseInertiaTensor(Rigidbody::createBoxInverseInertiaTensor(boxRb->getMass(), 5.0f, 5.0f, 5.0f));
+    boxRb->m_invInertiaTensor = Rigidbody::createBoxInverseInertiaTensor(boxRb->getMass(), 5.0f, 5.0f, 5.0f);
 
     std::cout << "Scene initialized successfully\n";
 }

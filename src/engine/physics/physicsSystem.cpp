@@ -566,3 +566,38 @@ void PhysicsSystem::adjustVelocities(float deltaTime)
         velocityIterationsUsed++;
     }
 }
+
+void PhysicsSystem::update(const std::vector<std::unique_ptr<Entity>> &entities, float deltaTime)
+{
+    for (const std::unique_ptr<Entity>& entityPtr : entities)
+    {
+        Entity* entity = entityPtr.get();
+        Rigidbody* rb = entity->GetComponent<Rigidbody>();
+        Transform* transform = entity->GetComponent<Transform>();
+
+        if (!rb || !transform) continue;
+        if (rb->m_inverseMass == 0.0f) continue;
+
+        glm::vec3 acceleration = rb->m_forceAcc * rb->m_inverseMass;
+        rb->m_velocity += acceleration * deltaTime;
+        
+        glm::vec3 angularAcceleration = rb->m_invInertiaTensorWorld * rb->m_torqueAcc;
+        rb->m_angularVelocity += angularAcceleration * deltaTime;
+
+        rb->m_velocity *= pow(rb->m_linearDamping, deltaTime);
+        rb->m_angularVelocity *= pow(rb->m_angularDamping, deltaTime);
+
+        rb->m_lastFrameAcc = acceleration;
+
+        transform->addPosition(rb->m_velocity * deltaTime);
+        transform->addRotation(rb->m_angularVelocity * deltaTime);
+
+        // Update inverse inertia tensor world due to objects rotation.
+        glm::mat4 modelMatrix = transform->getModelMatrix();
+        glm::mat3 rotationMatrix = glm::mat3(modelMatrix);
+        rb->m_invInertiaTensorWorld = rotationMatrix * rb->m_invInertiaTensor * glm::transpose(rotationMatrix);
+
+        rb->m_forceAcc = glm::vec3(0.0f);
+        rb->m_torqueAcc = glm::vec3(0.0f);
+    }
+}

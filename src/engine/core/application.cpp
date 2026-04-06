@@ -85,12 +85,13 @@ void Application::run()
         }
         m_activeScene->draw();
         
-        // Draw debug lines.
+        #ifdef DEBUG
         debugShader->use();
         debugShader->setMat4("view", 1, GL_FALSE, &m_activeScene->getMainViewMatrix()[0][0]);
         debugShader->setMat4("projection", 1, GL_FALSE, &m_activeScene->getMainProjectionMatrix()[0][0]);
         Debug::render(*debugShader);
-
+        #endif
+        
         if (m_window->ShouldClose())
         {
             close();

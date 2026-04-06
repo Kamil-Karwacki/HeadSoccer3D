@@ -30,19 +30,19 @@ void PlayerController::onUpdate(float deltaTime)
     glm::vec3 front = transform->getFront();
     if (manager.isActionHeld("forward"))
     {
-        rigidbody->addForce(-front * deltaTime * speed);
+        rigidbody->m_forceAcc += -front * deltaTime * speed;
     }
     if (manager.isActionHeld("back"))
     {
-        rigidbody->addForce(front * deltaTime * speed);
+        rigidbody->m_forceAcc += front * deltaTime * speed;
     }
     if (manager.isActionHeld("left"))
     {
-        rigidbody->addForce(glm::cross(front, up) * deltaTime * speed);
+        rigidbody->m_forceAcc += glm::cross(front, up) * deltaTime * speed;
     }
     if (manager.isActionHeld("right"))
     {
-        rigidbody->addForce(-glm::cross(front, up) * deltaTime * speed);
+        rigidbody->m_forceAcc += -glm::cross(front, up) * deltaTime * speed;
     }
 
     float mouseDeltaX = static_cast<float>(manager.getMouseDeltaX());
