@@ -63,3 +63,19 @@ void Transform::addPosition(const glm::vec3& position)
     m_position += position;
     m_isDirty = true;
 }
+
+void Transform::lookAt(const glm::vec3& targetPoint)
+{
+    glm::vec3 direction = glm::normalize(targetPoint - m_position);
+
+    glm::vec3 worldUp = glm::vec3(0.0f, 1.0f, 0.0f);
+
+    // If it is look directly up or down cross product will return (0,0,0)
+    // Which when trying to normalize will yield NaN
+    // So we change the axis so that vectors arent parallel
+    if (glm::abs(glm::dot(direction, worldUp)) > 0.999f)
+        worldUp = glm::vec3(0.0f, 0.0f, 1.0f);
+
+    m_rotation = glm::quatLookAt(direction, worldUp);
+    m_isDirty = true;
+}

@@ -8,8 +8,6 @@ class Collider : public Component
 public:
     virtual ~Collider() override = default;
     
-    void start() override;
-
     void calculateInternals();
     const glm::mat4& getWorldTransform() const;
     glm::vec3 getAxis(int index) const;    

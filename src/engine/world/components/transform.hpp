@@ -7,6 +7,9 @@
 class Transform : public Component 
 {
 public:
+    Transform() = default;
+    Transform(glm::vec3 position) : m_position(position)
+    {}
     virtual ~Transform() override = default;
 
     glm::vec3 getPosition() const { return m_position; }
@@ -21,6 +24,10 @@ public:
     void addRotation(const glm::quat& rotation); 
     void addRotation(const glm::vec3& eulerAngles); 
     void setScale(const glm::vec3& scale);
+
+    glm::vec3 getFront() const { return glm::normalize(m_rotation * glm::vec3(0.0f, 0.0f, -1.0f)); }
+    void lookAt(const glm::vec3& targetPoint);
+
     const glm::mat4& getModelMatrix();
 private:
     glm::vec3 m_position = glm::vec3(0.0f);

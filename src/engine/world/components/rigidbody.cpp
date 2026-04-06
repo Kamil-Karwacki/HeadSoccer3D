@@ -1,6 +1,6 @@
 #include "rigidbody.hpp"
 #include <iostream>
-
+/*
 void Rigidbody::start()
 {
     Transform* transform = m_entity->GetComponent<Transform>();
@@ -12,7 +12,7 @@ void Rigidbody::start()
     if (!collider)
         std::cerr << "Error: Rigidbody requires collider component!\n";
 }
-
+*/
 void Rigidbody::integrate(float deltaTime)
 {
     glm::vec3 acceleration = m_forceAccumulated * m_inverseMass;

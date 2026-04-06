@@ -1,9 +1,10 @@
 #pragma once
 
+#include <memory>
+
 #include "graphics/shader.hpp"
 #include "window.hpp"
 #include "input.hpp"
-#include <memory>
 #include "world/scene.hpp"
 
 class Application
@@ -23,8 +24,10 @@ public:
     int getWindowHeight() { return m_window->getHeight(); }
     
     void loadShader(const std::string& name, const char* vertexPath, const char* fragmentPath);
-    std::shared_ptr<Shader> getShader(const std::string& name);
+    Shader* getShader(const std::string& name);
     unsigned int getWhiteTexture() { return whiteTexture; }
+
+    void loadScene(std::unique_ptr<Scene> scene);
 
 private:
     std::unique_ptr<Window> m_window;
@@ -36,7 +39,7 @@ private:
     static Application* s_Instance;
 
     unsigned int whiteTexture;
-    std::unordered_map<std::string, std::shared_ptr<Shader>> m_shaders;
+    std::unordered_map<std::string, std::unique_ptr<Shader>> m_shaders;
 
     std::unique_ptr<Scene> m_activeScene;
 };

@@ -19,7 +19,6 @@ public:
     float m_linearDamping = 0.9f;
     float m_angularDamping = 0.9f;
     
-    void start() override;
     void integrate(float deltaTime);
 
     void setMass(float mass) { m_inverseMass = (mass == 0.0f) ? 0.0f : 1.0f / mass; }

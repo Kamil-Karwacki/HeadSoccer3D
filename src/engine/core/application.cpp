@@ -1,16 +1,16 @@
 #include <glad/glad.h>
+#include <iostream>
+
 #include "application.hpp"
 #include "input.hpp"
 #include "window.hpp"
+#include "debug.hpp"
 #include "graphics/shader.hpp"
 #include "graphics/mesh.hpp"
 #include "world/entity.hpp"
 #include "world/component.hpp"
 #include "world/components/transform.hpp"
 #include "world/components/meshRenderer.hpp"
-#include "world/components/playerController.hpp"
-#include <iostream>
-#include "core/debug.hpp"
 
 Application* Application::s_Instance = nullptr;
 
@@ -29,16 +29,6 @@ Application::Application() : m_isRunning(true)
     loadShader("default", PROJECT_DIR "assets/shaders/default.vert", PROJECT_DIR "assets/shaders/default.frag");
     loadShader("lineDebug", PROJECT_DIR "assets/shaders/lineDebug.vert", PROJECT_DIR "assets/shaders/lineDebug.frag");
     Debug::init();
-}
-
-Application::~Application()
-{
-    glfwTerminate();
-}
-
-void Application::run()
-{
-    glfwSetInputMode(m_window->getNativeWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     glEnable(GL_DEPTH_TEST);
 
@@ -53,12 +43,18 @@ void Application::run()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+}
 
-    m_activeScene = std::make_unique<Scene>();
-    m_activeScene->init();
+Application::~Application()
+{
+    glfwTerminate();
+}
 
-    std::shared_ptr<Shader> defaultShader = getShader("default");
-    std::shared_ptr<Shader> debugShader = getShader("lineDebug");
+void Application::run()
+{
+    glfwSetInputMode(m_window->getNativeWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+    Shader* debugShader = getShader("lineDebug");
     
     double accumulator = 0.0;
     const double fixedDeltaTime = 1.0 / 60.0;
@@ -81,7 +77,6 @@ void Application::run()
 
         Debug::update(static_cast<float>(deltaTime));
 
-        defaultShader->use();
         m_activeScene->update(static_cast<float>(deltaTime));
         while (accumulator >= fixedDeltaTime)
         {
@@ -112,17 +107,24 @@ void Application::close()
 
 void Application::loadShader(const std::string& name, const char* vertexPath, const char* fragmentPath)
 {
-    m_shaders[name] = std::make_shared<Shader>(vertexPath, fragmentPath);
+    m_shaders[name] = std::make_unique<Shader>(vertexPath, fragmentPath);
 }
 
-std::shared_ptr<Shader> Application::getShader(const std::string& name)
+Shader* Application::getShader(const std::string& name)
 {
     auto it = m_shaders.find(name);
     if (it != m_shaders.end())
     {
-        return it->second;
+        return it->second.get();
     }
 
     std::cerr << "Error: Couldn't find shader with this name: " << name << "\n";
     return nullptr;
+}
+
+void Application::loadScene(std::unique_ptr<Scene> scene)
+{
+    m_activeScene = std::move(scene);
+    if (m_activeScene)
+        m_activeScene->init();
 }
