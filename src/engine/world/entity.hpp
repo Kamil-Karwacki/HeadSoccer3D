@@ -1,30 +1,32 @@
 #pragma once
-#include "component.hpp"
 #include <vector>
 #include <memory>
 #include <iostream>
+#include <type_traits>
+
+#include "component.hpp"
+#include "behaviour.hpp"
+
+class Scene;
 
 class Entity
 {
 public:
-    Entity() = default;
-    ~Entity() = default;
-
-    void update(float deltaTime);
-    void draw();
-
+    Entity(Scene* scene) : m_scene(scene) {}
     template <typename T, typename... Args>
     T& AddComponent(Args&&... args)
     {
         auto newComponent = std::make_unique<T>(std::forward<Args>(args)...);
-        
         newComponent->m_entity = this;
-        
         T* rawPointer = newComponent.get();
-        
         m_components.push_back(std::move(newComponent));
         
-        rawPointer->start();
+        if constexpr (std::is_base_of_v<Behaviour, T>)
+        {
+            m_scene->addBehaviour(rawPointer);
+            rawPointer->onStart();
+        }
+
         return *rawPointer;
     }
 
@@ -44,4 +46,5 @@ public:
 
 private:
     std::vector<std::unique_ptr<Component>> m_components;
+    Scene* m_scene;
 };

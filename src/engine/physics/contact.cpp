@@ -60,10 +60,10 @@ void Contact::calculateDesiredDeltaVelocity(float deltaTime)
 {
     static constexpr float velocityLimit = 0.25f;    
 
-    float velocityFromAcc = glm::dot(m_body[0]->getLastFrameAcceleration(), m_contactNormal) * deltaTime;
+    float velocityFromAcc = glm::dot(m_body[0]->m_lastFrameAcc, m_contactNormal) * deltaTime;
 
     if(m_body[1])
-        velocityFromAcc -= glm::dot(m_body[1]->getLastFrameAcceleration(), m_contactNormal) * deltaTime;
+        velocityFromAcc -= glm::dot(m_body[1]->m_lastFrameAcc, m_contactNormal) * deltaTime;
 
     float thisRestitution = m_restitution;
 
@@ -78,12 +78,12 @@ glm::vec3 Contact::calculateLocalVelocity(unsigned int bodyIndex, float deltaTim
 {
     Rigidbody* body = m_body[bodyIndex];
 
-    glm::vec3 velocity = glm::cross(body->getAngularVelocity(), m_relativeContactPosition[bodyIndex]);
-    velocity += body->getVelocity();
+    glm::vec3 velocity = glm::cross(body->m_angularVelocity, m_relativeContactPosition[bodyIndex]);
+    velocity += body->m_velocity;
 
     glm::vec3 contactVelocity = glm::transpose(m_contactToWorld) * velocity;
 
-    glm::vec3 accVelocity = body->getLastFrameAcceleration() * deltaTime;
+    glm::vec3 accVelocity = body->m_lastFrameAcc * deltaTime;
     accVelocity = m_contactToWorld * accVelocity;
     accVelocity.x = 0;
     contactVelocity += accVelocity;
@@ -107,13 +107,13 @@ void Contact::applyPositionChange(glm::vec3 linearChange[2], glm::vec3 angularCh
         if (!m_body[i])
             continue;
 
-        glm::mat3 inverseInertiaTensor = m_body[i]->getWorldInertiaTensor();
+        glm::mat3 inverseInertiaTensor = m_body[i]->m_invInertiaTensorWorld;
         glm::vec3 angularInertiaWorld = glm::cross(m_relativeContactPosition[i], m_contactNormal);
         angularInertiaWorld = inverseInertiaTensor * angularInertiaWorld;
         angularInertiaWorld = glm::cross(angularInertiaWorld, m_relativeContactPosition[i]);
         angularInertia[i] = glm::dot(angularInertiaWorld, m_contactNormal);
 
-        linearInertia[i] = m_body[i]->getInverseMass();
+        linearInertia[i] = m_body[i]->m_inverseMass;
 
         totalInertia += linearInertia[i] + angularInertia[i];
     }
@@ -151,7 +151,7 @@ void Contact::applyPositionChange(glm::vec3 linearChange[2], glm::vec3 angularCh
         else
         {
             glm::vec3 targetAngularDirection = glm::cross(m_relativeContactPosition[i], m_contactNormal);
-            glm::mat3 inverseInertiaTensor = m_body[i]->getWorldInertiaTensor();
+            glm::mat3 inverseInertiaTensor = m_body[i]->m_invInertiaTensorWorld;
 
             angularChange[i] = inverseInertiaTensor * targetAngularDirection * (angularMove[i] / angularInertia[i]);
         }
@@ -168,9 +168,9 @@ void Contact::applyPositionChange(glm::vec3 linearChange[2], glm::vec3 angularCh
 void Contact::applyVelocityChange(glm::vec3 velocityChange[2], glm::vec3 rotationChange[2])
 {
     glm::mat3 inverseInertiaTensor[2];
-    inverseInertiaTensor[0] = m_body[0]->getWorldInertiaTensor();
+    inverseInertiaTensor[0] = m_body[0]->m_invInertiaTensorWorld;
     if (m_body[1])
-        inverseInertiaTensor[1] = m_body[1]->getWorldInertiaTensor();
+        inverseInertiaTensor[1] = m_body[1]->m_invInertiaTensorWorld;
 
     glm::vec3 impulseContact;
 
@@ -185,40 +185,40 @@ void Contact::applyVelocityChange(glm::vec3 velocityChange[2], glm::vec3 rotatio
     glm::vec3 impulse = m_contactToWorld * impulseContact;
     glm::vec3 impulsiveTorque = glm::cross(m_relativeContactPosition[0], impulse);
     rotationChange[0] = inverseInertiaTensor[0] * impulsiveTorque;
-    velocityChange[0] = impulse * m_body[0]->getInverseMass();
+    velocityChange[0] = impulse * m_body[0]->m_inverseMass;
 
-    m_body[0]->addVelocity(velocityChange[0]);
-    m_body[0]->addAngularVelocity(rotationChange[0]);
+    m_body[0]->m_velocity += velocityChange[0];
+    m_body[0]->m_angularVelocity += rotationChange[0];
 
     if (m_body[1])
     {
         glm::vec3 impulsiveTorque = glm::cross(impulse, m_relativeContactPosition[1]);
         rotationChange[1] = inverseInertiaTensor[1] * impulsiveTorque;
         velocityChange[1] = glm::vec3(0.0f);
-        velocityChange[1] += impulse * -m_body[1]->getInverseMass();
+        velocityChange[1] += impulse * -m_body[1]->m_inverseMass;
 
-        m_body[1]->addVelocity(velocityChange[1]);
-        m_body[1]->addAngularVelocity(rotationChange[1]);
+        m_body[1]->m_velocity += velocityChange[1];
+        m_body[1]->m_angularVelocity += rotationChange[1];
     }
 }
 
 glm::vec3 Contact::calculateFrictionlessImpulse()
 {
     glm::vec3 deltaVelWorld = glm::cross(m_relativeContactPosition[0], m_contactNormal);
-    deltaVelWorld = m_body[0]->getWorldInertiaTensor() * deltaVelWorld;
+    deltaVelWorld = m_body[0]->m_invInertiaTensorWorld * deltaVelWorld;
     deltaVelWorld = glm::cross(deltaVelWorld, m_relativeContactPosition[0]);
     
     float deltaVelocity = glm::dot(deltaVelWorld, m_contactNormal);
-    deltaVelocity += m_body[0]->getInverseMass();
+    deltaVelocity += m_body[0]->m_inverseMass;
     
     if (m_body[1])
     {
         glm::vec3 deltaVelWorld = glm::cross(m_relativeContactPosition[1], m_contactNormal);
-        deltaVelWorld = m_body[1]->getWorldInertiaTensor() * deltaVelWorld;
+        deltaVelWorld = m_body[1]->m_invInertiaTensorWorld * deltaVelWorld;
         deltaVelWorld = glm::cross(deltaVelWorld, m_relativeContactPosition[1]);
 
         deltaVelocity += glm::dot(deltaVelWorld, m_contactNormal);
-        deltaVelocity += m_body[1]->getInverseMass();
+        deltaVelocity += m_body[1]->m_inverseMass;
     }
 
     glm::vec3 impulseContact = glm::vec3(
@@ -232,7 +232,7 @@ glm::vec3 Contact::calculateFrictionlessImpulse()
 glm::vec3 Contact::calculateFrictionImpulse()
 {
     glm::vec3 impulseContact;
-    float inverseMass = m_body[0]->getInverseMass();
+    float inverseMass = m_body[0]->m_inverseMass;
 
     glm::mat3 impulseToTorque(
         0.0f, m_relativeContactPosition[0].z, -m_relativeContactPosition[0].y,
@@ -241,13 +241,13 @@ glm::vec3 Contact::calculateFrictionImpulse()
     );
 
     glm::mat3 deltaVelWorld = impulseToTorque;
-    deltaVelWorld *= m_body[0]->getWorldInertiaTensor();
+    deltaVelWorld *= m_body[0]->m_invInertiaTensorWorld;
     deltaVelWorld *= impulseToTorque;
     deltaVelWorld *= -1;
 
     if (m_body[1])
     {
-        inverseMass += m_body[1]->getInverseMass();
+        inverseMass += m_body[1]->m_inverseMass;
 
         glm::mat3 impulseToTorque(
             0.0f, m_relativeContactPosition[1].z, -m_relativeContactPosition[1].y,
@@ -256,7 +256,7 @@ glm::vec3 Contact::calculateFrictionImpulse()
         );
 
         glm::mat3 deltaVelWorld2 = impulseToTorque;
-        deltaVelWorld2 *= m_body[1]->getWorldInertiaTensor();
+        deltaVelWorld2 *= m_body[1]->m_invInertiaTensorWorld;
         deltaVelWorld2 *= impulseToTorque;
         deltaVelWorld2 *= -1;
 

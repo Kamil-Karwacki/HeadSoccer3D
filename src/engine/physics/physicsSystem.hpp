@@ -22,6 +22,7 @@ public:
     /// @param deltaTime Time between simulation steps in seconds.
     void adjustVelocities(float deltaTime);
 
+    void update(const std::vector<std::unique_ptr<Entity>>& entities, float deltaTime);
 private:
     std::vector<Contact> m_contacts;
     float m_positionEpsilon = 0.01f;

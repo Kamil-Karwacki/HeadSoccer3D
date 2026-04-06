@@ -51,35 +51,37 @@ add_subdirectory(external/glad)
 
 add_definitions(-DPROJECT_DIR="${CMAKE_CURRENT_SOURCE_DIR}/")
 
-add_executable(${PROJECT_NAME} ${SOURCES})
+add_executable(${PROJECT_NAME})
 
 target_sources(${PROJECT_NAME} PRIVATE
+    src/engine/core/application.cpp
+    src/engine/core/debug.cpp
+    src/engine/core/input.cpp
+    src/engine/core/window.cpp
+    src/engine/graphics/mesh.cpp
+    src/engine/graphics/model.cpp
+    src/engine/graphics/shader.cpp
+    src/engine/graphics/renderSystem.cpp
+    src/engine/physics/contact.cpp
+    src/engine/physics/physicsSystem.cpp
+    src/engine/world/scene.cpp
+    src/engine/world/components/collider.cpp
+    src/engine/world/components/rigidbody.cpp
+    src/engine/world/components/transform.cpp
+    src/game/scripts/playerController.cpp
+    src/game/scripts/baseScene.cpp
+    src/game/scripts/cameraController.cpp
+    src/third_party/stb_implementation.cpp
+    src/third_party/tinyobjloader_implementation.cpp
     src/main.cpp
-    src/stb_implementation.cpp
-    src/tinyobjloader_implementation.cpp
-    src/core/application.cpp
-    src/core/input.cpp
-    src/core/window.cpp
-    src/core/debug.cpp
-    src/graphics/shader.cpp
-    src/graphics/mesh.cpp
-    src/graphics/model.cpp
-    src/world/entity.cpp
-    src/world/scene.cpp
-    src/world/components/transform.cpp
-    src/world/components/playerController.cpp
-    src/world/components/meshRenderer.cpp
-    src/world/components/rigidbody.cpp
-    src/world/components/collider.cpp
-    src/world/components/camera.cpp
-    src/physics/contact.cpp
-    src/physics/physicsSystem.cpp
 )
 
 target_compile_options(${PROJECT_NAME} PRIVATE ${COMPILER_WARNINGS})
 
 target_include_directories(${PROJECT_NAME} PRIVATE 
-    src
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/engine
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/game
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/third_party
     ${stb_SOURCE_DIR}
 )
 

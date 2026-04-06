@@ -58,7 +58,7 @@ bool PhysicsSystem::sphereAndHalfspace(const SphereCollider& sphere, const Plane
 bool PhysicsSystem::boxAndSphere(const BoxCollider& box, const SphereCollider& sphere, Rigidbody& rbA, Rigidbody& rbB)
 {
     glm::vec3 sphereCenter = sphere.getAxis(3);
-    glm::vec3 relCenter = glm::vec3(glm::inverse(box.getWorldTransform()) * glm::vec4(sphereCenter, 1.0f));
+    glm::vec3 relCenter = glm::vec3(glm::inverse(box.m_worldTransform) * glm::vec4(sphereCenter, 1.0f));
 
     if (fabsf(relCenter.x) - sphere.m_radius > box.m_halfSize.x ||
         fabsf(relCenter.y) - sphere.m_radius > box.m_halfSize.y ||
@@ -88,14 +88,14 @@ bool PhysicsSystem::boxAndSphere(const BoxCollider& box, const SphereCollider& s
     distance = glm::length2(closestPoint - relCenter);
     if (distance > sphere.m_radius * sphere.m_radius) return false;
 
-    glm::vec3 closestPtWorld = glm::vec3(box.getWorldTransform() * glm::vec4(closestPoint, 1.0f));
+    glm::vec3 closestPtWorld = glm::vec3(box.m_worldTransform * glm::vec4(closestPoint, 1.0f));
 
     Contact contact;
     
     // Precaution when spheres center would be inside box (NaN)
     if (distance * distance < 0.0001f)
     {
-        glm::vec3 boxCenter = glm::vec3(box.getWorldTransform()[3]);
+        glm::vec3 boxCenter = box.getAxis(3);
 
         contact.m_contactNormal = glm::normalize(sphereCenter - boxCenter);
 
@@ -199,8 +199,8 @@ bool PhysicsSystem::boxAndBox(const BoxCollider& boxA, const BoxCollider& boxB, 
             else if (glm::dot(boxB.getAxis(i), axis) < 0) ptOnTwoEdge[i] = -ptOnTwoEdge[i];
         }
 
-        ptOnOneEdge = boxA.getWorldTransform() * glm::vec4(ptOnOneEdge, 1.0f);
-        ptOnTwoEdge = boxB.getWorldTransform() * glm::vec4(ptOnTwoEdge, 1.0f);
+        ptOnOneEdge = boxA.m_worldTransform * glm::vec4(ptOnOneEdge, 1.0f);
+        ptOnTwoEdge = boxB.m_worldTransform * glm::vec4(ptOnTwoEdge, 1.0f);
 
         glm::vec3 vertex = contactPoint(
             ptOnOneEdge, oneAxis, boxA.m_halfSize[oneAxisIndex],
@@ -319,7 +319,7 @@ void PhysicsSystem::fillPointFaceBoxBox(
 
     Contact contact;
     contact.m_contactNormal = normal;
-    contact.m_contactPoint = boxB.getWorldTransform() * glm::vec4(vertex, 1.0f);
+    contact.m_contactPoint = boxB.m_worldTransform * glm::vec4(vertex, 1.0f);
     contact.m_penetration = pen;
     Rigidbody* bodyA = boxA.m_entity->GetComponent<Rigidbody>();
     Rigidbody* bodyB = boxB.m_entity->GetComponent<Rigidbody>();
@@ -349,7 +349,7 @@ bool PhysicsSystem::boxAndHalfspace(const BoxCollider& box, const PlaneCollider&
     {
         glm::vec3 vertexPos(mults[i][0], mults[i][1], mults[i][2]);
         vertexPos *= box.m_halfSize;
-        vertexPos = box.getWorldTransform() * glm::vec4(vertexPos, 1.0f);
+        vertexPos = box.m_worldTransform * glm::vec4(vertexPos, 1.0f);
 
         float vertexDistance = glm::dot(vertexPos, plane.m_normal);
 
@@ -378,10 +378,12 @@ void PhysicsSystem::generateContacts(std::vector<std::unique_ptr<Entity>>& entit
     for (auto& entity : entities)
     {
         Collider* collider = entity->GetComponent<Collider>();
-        if (collider)
-        {
-            collider->calculateInternals();
-        }
+        if (!collider) continue;
+
+        Transform* transform = entity->GetComponent<Transform>();
+        if (!transform) continue;
+
+        collider->m_worldTransform = transform->getModelMatrix() * collider->m_offset;
     }
 
     for (size_t i = 0; i < entities.size(); i++)
@@ -564,5 +566,40 @@ void PhysicsSystem::adjustVelocities(float deltaTime)
             }
         }
         velocityIterationsUsed++;
+    }
+}
+
+void PhysicsSystem::update(const std::vector<std::unique_ptr<Entity>> &entities, float deltaTime)
+{
+    for (const std::unique_ptr<Entity>& entityPtr : entities)
+    {
+        Entity* entity = entityPtr.get();
+        Rigidbody* rb = entity->GetComponent<Rigidbody>();
+        Transform* transform = entity->GetComponent<Transform>();
+
+        if (!rb || !transform) continue;
+        if (rb->m_inverseMass == 0.0f) continue;
+
+        glm::vec3 acceleration = rb->m_forceAcc * rb->m_inverseMass;
+        rb->m_velocity += acceleration * deltaTime;
+        
+        glm::vec3 angularAcceleration = rb->m_invInertiaTensorWorld * rb->m_torqueAcc;
+        rb->m_angularVelocity += angularAcceleration * deltaTime;
+
+        rb->m_velocity *= pow(rb->m_linearDamping, deltaTime);
+        rb->m_angularVelocity *= pow(rb->m_angularDamping, deltaTime);
+
+        rb->m_lastFrameAcc = acceleration;
+
+        transform->addPosition(rb->m_velocity * deltaTime);
+        transform->addRotation(rb->m_angularVelocity * deltaTime);
+
+        // Update inverse inertia tensor world due to objects rotation.
+        glm::mat4 modelMatrix = transform->getModelMatrix();
+        glm::mat3 rotationMatrix = glm::mat3(modelMatrix);
+        rb->m_invInertiaTensorWorld = rotationMatrix * rb->m_invInertiaTensor * glm::transpose(rotationMatrix);
+
+        rb->m_forceAcc = glm::vec3(0.0f);
+        rb->m_torqueAcc = glm::vec3(0.0f);
     }
 }
