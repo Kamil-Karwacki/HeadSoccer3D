@@ -66,8 +66,7 @@ void BaseScene::init()
     boxTwo.GetComponent<Transform>()->setPosition(glm::vec3(4.0f, 6.0f, 1.0f));
     boxTwo.GetComponent<Transform>()->setRotation(glm::vec3(3));
     boxTwo.AddComponent<BoxCollider>(glm::vec3(2.5f, 2.5f, 2.5f));
-    boxTwo.AddComponent<Rigidbody>(10.0f, 0.3f, 3.0f, 0.5f, 0.5f);
-    Rigidbody* boxRb = boxTwo.GetComponent<Rigidbody>();
+    Rigidbody* boxRb = &boxTwo.AddComponent<Rigidbody>(10.0f, 0.3f, 3.0f, 0.5f, 0.5f);
     boxRb->m_invInertiaTensor = Rigidbody::createBoxInverseInertiaTensor(boxRb->getMass(), 5.0f, 5.0f, 5.0f);
 
     std::cout << "Scene initialized successfully\n";

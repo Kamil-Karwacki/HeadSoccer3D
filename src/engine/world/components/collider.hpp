@@ -3,21 +3,18 @@
 #include "world/component.hpp"
 #include "world/components/transform.hpp"
 
-class Collider : public Component
+struct Collider : public Component
 {
 public:
     virtual ~Collider() override = default;
     
-    void calculateInternals();
-    const glm::mat4& getWorldTransform() const;
     glm::vec3 getAxis(int index) const;    
 
     glm::mat4 m_offset = glm::mat4(1.0f);
-private:
-    glm::mat4 m_cachedWorldTransform = glm::mat4(1.0f);
+    glm::mat4 m_worldTransform = glm::mat4(1.0f);
 };
 
-class PlaneCollider : public Component
+struct PlaneCollider : public Component
 {
 public:
     PlaneCollider(const glm::vec3& normal, float offset) : m_normal(normal), m_offset(offset) {}
@@ -26,7 +23,7 @@ public:
     float m_offset = 0.0f;
 };
 
-class SphereCollider : public Collider
+struct SphereCollider : public Collider
 {
 public:
     SphereCollider(float radius = 1.0f) : m_radius(radius) {} 
@@ -34,7 +31,7 @@ public:
     float m_radius;
 };
 
-class BoxCollider : public Collider
+struct BoxCollider : public Collider
 {
 public:
     BoxCollider(glm::vec3 halfSize = glm::vec3(1.0f)) : m_halfSize(halfSize) {} 
