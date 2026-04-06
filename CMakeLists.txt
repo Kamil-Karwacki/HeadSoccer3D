@@ -71,6 +71,7 @@ target_sources(${PROJECT_NAME} PRIVATE
     src/world/components/meshRenderer.cpp
     src/world/components/rigidbody.cpp
     src/world/components/collider.cpp
+    src/world/components/camera.cpp
     src/physics/contact.cpp
     src/physics/physicsSystem.cpp
 )
