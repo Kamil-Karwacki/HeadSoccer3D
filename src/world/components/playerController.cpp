@@ -10,11 +10,6 @@ void PlayerController::start()
     
     if (!transform)
         std::cerr << "Error: PlayerController requires transform component!\n";
-    
-    Application& app = Application::Get();
-    m_projection = glm::perspective(
-        glm::radians(45.0f), static_cast<float>(app.getWindowWidth()) / 
-        static_cast<float>(app.getWindowHeight()), 0.1f, 100.0f);
 }
 
 void PlayerController::update(float deltaTime)
@@ -57,32 +52,4 @@ void PlayerController::update(float deltaTime)
     m_pitch = glm::clamp(m_pitch, -1.5f, 1.5f);
 
     transform->setRotation(glm::vec3(m_pitch, -m_yaw, 0.0f));
-
-    std::shared_ptr<Shader> defaultShader = app.getShader("default");
-
-    glm::mat4 view = getViewMatrix();
-
-    defaultShader->setMat4("view", 1, GL_FALSE, &view[0][0]);
-    defaultShader->setMat4("projection", 1, GL_FALSE, &m_projection[0][0]);
-}
-
-glm::mat4 PlayerController::getViewMatrix()
-{
-    glm::mat4 view = glm::mat4(1.0f);
-    Transform* transform = m_entity->GetComponent<Transform>();
-
-    m_front = transform->getRotation() * glm::vec3(0.0f, 0.0f, -1.0f);
-    m_front = glm::normalize(m_front);
-
-
-    glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
-
-    view = glm::translate(view, transform->getPosition());
-    view = glm::lookAt(transform->getPosition(), transform->getPosition() + m_front, up);
-    return view;
-}
-
-glm::mat4 PlayerController::getProjectionMatrix()
-{
-    return m_projection;
 }

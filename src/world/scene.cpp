@@ -12,7 +12,8 @@ void Scene::init()
 
     Entity* player = new Entity();
     player->AddComponent<Transform>();
-    m_mainPlayer = &player->AddComponent<PlayerController>(); 
+    player->AddComponent<PlayerController>(); 
+    m_mainCamera = &player->AddComponent<Camera>();
 
     Transform* playerTransform = player->GetComponent<Transform>();
     playerTransform->setPosition(glm::vec3(0, 3, 20));
@@ -103,10 +104,10 @@ void Scene::draw()
 
 glm::mat4 Scene::getMainViewMatrix() const 
 {
-    return m_mainPlayer ? m_mainPlayer->getViewMatrix() : glm::mat4(1.0f); 
+    return m_mainCamera ? m_mainCamera->getView() : glm::mat4(1.0f); 
 }
 
 glm::mat4 Scene::getMainProjectionMatrix() const
 {
-    return m_mainPlayer ? m_mainPlayer->getProjectionMatrix() : glm::mat4(1.0f);
+    return m_mainCamera ? m_mainCamera->getProjection() : glm::mat4(1.0f);
 }
