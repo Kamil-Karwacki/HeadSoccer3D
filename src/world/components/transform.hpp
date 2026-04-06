@@ -7,7 +7,7 @@
 class Transform : public Component 
 {
 public:
-    Transform() = default;
+    virtual ~Transform() override = default;
 
     glm::vec3 getPosition() const { return m_position; }
     glm::quat getRotation() const { return m_rotation; }

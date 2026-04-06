@@ -8,16 +8,12 @@
 class PlayerController : public Component
 {
 public:
-    PlayerController() = default;
-    ~PlayerController() = default;
+    virtual ~PlayerController() override = default;
+
     void start() override;
     void update(float deltaTime) override;
-    glm::mat4 getViewMatrix();
-    glm::mat4 getProjectionMatrix();
 private:
     float m_yaw = 0.0f;
     float m_pitch = 0.0f;
-
-    glm::vec3 m_front;
-    glm::mat4 m_projection;
+    glm::vec3 m_front = glm::vec3(0.0f, 0.0f, 1.0f);
 };

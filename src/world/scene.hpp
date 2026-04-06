@@ -3,7 +3,7 @@
 #include "entity.hpp"
 #include "physics/physicsSystem.hpp"
 #include "components/playerController.hpp"
-
+#include "world/components/camera.hpp"
 
 class Scene
 {
@@ -17,10 +17,10 @@ public:
 
     glm::mat4 getMainViewMatrix() const;
     glm::mat4 getMainProjectionMatrix() const;
-    void setMainPlayer(PlayerController* player) { m_mainPlayer = player; }
+    void setMainCamera(Camera* camera) { m_mainCamera = camera; }
 
 private:
     std::vector<std::unique_ptr<Entity>> m_entities;
     PhysicsSystem m_physicsSystem;
-    PlayerController* m_mainPlayer = nullptr;
+    Camera* m_mainCamera = nullptr;
 };

@@ -11,6 +11,8 @@ public:
         m_restitution(restitution), m_friction(friction), m_inverseMass(1.0f / mass), 
         m_linearDamping(linearDamping), m_angularDamping(angularDamping) {}
         
+    virtual ~Rigidbody() override = default; 
+
     float m_restitution;
     float m_friction;
 
