@@ -1,15 +1,20 @@
-#include <glad/glad.h>
 #include "playerController.hpp"
-#include "core/application.hpp"
+
+#include <glad/glad.h>
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+
+#include "core/application.hpp"
+#include "world/components/rigidbody.hpp"
+#include "world/components/transform.hpp"
+#include "world/entity.hpp"
 
 void PlayerController::onStart()
 {
     Transform* transform = m_entity->GetComponent<Transform>();
-    
-    if (!transform)
-        std::cerr << "Error: PlayerController requires transform component!\n";
+
+    if (!transform) std::cerr << "Error: PlayerController requires transform component!\n";
 }
 
 void PlayerController::onUpdate(float deltaTime)
@@ -17,12 +22,11 @@ void PlayerController::onUpdate(float deltaTime)
     Transform* transform = m_entity->GetComponent<Transform>();
     Rigidbody* rigidbody = m_entity->GetComponent<Rigidbody>();
 
-    if (!transform || !rigidbody)
-        return;
-    
+    if (!transform || !rigidbody) return;
+
     static constexpr float speed = 2000.0f;
     glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
-    
+
     Application& app = Application::Get();
 
     InputManager manager = app.GetInput();

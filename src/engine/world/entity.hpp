@@ -1,34 +1,22 @@
 #pragma once
-#include <vector>
 #include <memory>
-#include <iostream>
 #include <type_traits>
+#include <vector>
 
-#include "component.hpp"
 #include "behaviour.hpp"
+#include "component.hpp"
 
 class Scene;
 
 class Entity
 {
-public:
-    Entity(Scene* scene) : m_scene(scene) {}
-    template <typename T, typename... Args>
-    T& AddComponent(Args&&... args)
+   public:
+    Entity(Scene* scene) : m_scene(scene)
     {
-        auto newComponent = std::make_unique<T>(std::forward<Args>(args)...);
-        newComponent->m_entity = this;
-        T* rawPointer = newComponent.get();
-        m_components.push_back(std::move(newComponent));
-        
-        if constexpr (std::is_base_of_v<Behaviour, T>)
-        {
-            m_scene->addBehaviour(rawPointer);
-            rawPointer->onStart();
-        }
-
-        return *rawPointer;
     }
+
+    template <typename T, typename... Args>
+    T& AddComponent(Args&&... args);
 
     template <typename T>
     T* GetComponent()
@@ -44,7 +32,39 @@ public:
         return nullptr;
     }
 
-private:
+    void notifyTriggerEnter(Entity* other)
+    {
+        for (Behaviour* script : m_behaviours) script->onTriggerEnter(other);
+    }
+
+    void notifyCollisionEnter(Entity* other)
+    {
+        for (Behaviour* script : m_behaviours) script->onCollisionEnter(other);
+    }
+
+   private:
     std::vector<std::unique_ptr<Component>> m_components;
+    std::vector<Behaviour*> m_behaviours;
     Scene* m_scene;
 };
+
+#include "world/scene.hpp"
+
+template <typename T, typename... Args>
+T& Entity::AddComponent(Args&&... args)
+{
+    auto newComponent = std::make_unique<T>(std::forward<Args>(args)...);
+    newComponent->m_entity = this;
+    T* rawPointer = newComponent.get();
+
+    m_components.push_back(std::move(newComponent));
+
+    if constexpr (std::is_base_of_v<Behaviour, T>)
+    {
+        m_scene->addBehaviour(rawPointer);
+        m_behaviours.push_back(rawPointer);
+        rawPointer->onStart();
+    }
+
+    return *rawPointer;
+}

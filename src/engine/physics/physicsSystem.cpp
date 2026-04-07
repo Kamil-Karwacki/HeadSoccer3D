@@ -1,11 +1,14 @@
 #include "physicsSystem.hpp"
+
 #include "world/component.hpp"
 #include "world/components/transform.hpp"
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/norm.hpp>
+
 #include "core/debug.hpp"
 
-bool PhysicsSystem::sphereAndSphere(const SphereCollider& one, const SphereCollider& two, Rigidbody& rbA, Rigidbody& rbB)
+bool PhysicsSystem::sphereAndSphere(const SphereCollider& one, const SphereCollider& two,
+                                    Rigidbody& rbA, Rigidbody& rbB)
 {
     glm::vec3 positionOne = one.getAxis(3);
     glm::vec3 positionTwo = two.getAxis(3);
@@ -13,8 +16,15 @@ bool PhysicsSystem::sphereAndSphere(const SphereCollider& one, const SphereColli
     glm::vec3 midline = positionOne - positionTwo;
     float size = glm::length(midline);
 
-    if (size <= 0.0f || size >= one.m_radius + two.m_radius)
-        return false;
+    if (size <= 0.0f || size >= one.m_radius + two.m_radius) return false;
+
+    bool isTrigger = one.m_isTrigger || two.m_isTrigger;
+
+    if (isTrigger)
+    {
+        notifyTrigger(one.m_entity, two.m_entity);
+        return true;
+    }
 
     glm::vec3 normal = midline * (1.0f / size);
 
@@ -29,10 +39,12 @@ bool PhysicsSystem::sphereAndSphere(const SphereCollider& one, const SphereColli
     contact.m_friction = (rbA.m_friction + rbB.m_friction) * 0.5f;
     m_contacts.push_back(contact);
 
+    notifyColliision(one.m_entity, two.m_entity);
     return true;
 }
 
-bool PhysicsSystem::sphereAndHalfspace(const SphereCollider& sphere, const PlaneCollider& plane, Rigidbody& rbA)
+bool PhysicsSystem::sphereAndHalfspace(const SphereCollider& sphere, const PlaneCollider& plane,
+                                       Rigidbody& rbA)
 {
     glm::vec3 position = sphere.getAxis(3);
 
@@ -40,31 +52,47 @@ bool PhysicsSystem::sphereAndHalfspace(const SphereCollider& sphere, const Plane
 
     if (ballDistance >= 0) return false;
 
+    bool isTrigger = sphere.m_isTrigger || plane.m_isTrigger;
+    if (isTrigger)
+    {
+        notifyTrigger(sphere.m_entity, plane.m_entity);
+        return true;
+    }
+
     Contact contact;
     contact.m_contactNormal = plane.m_normal;
     contact.m_penetration = -ballDistance;
     contact.m_contactPoint = position - plane.m_normal * (ballDistance + sphere.m_radius);
 
-
     contact.m_body[0] = &rbA;
-    contact.m_body[1] = nullptr; 
+    contact.m_body[1] = nullptr;
     contact.m_restitution = rbA.m_restitution;
     contact.m_friction = rbA.m_friction;
 
     m_contacts.push_back(contact);
+    notifyColliision(sphere.m_entity, plane.m_entity);
     return true;
 }
 
-bool PhysicsSystem::boxAndSphere(const BoxCollider& box, const SphereCollider& sphere, Rigidbody& rbA, Rigidbody& rbB)
+bool PhysicsSystem::boxAndSphere(const BoxCollider& box, const SphereCollider& sphere,
+                                 Rigidbody& rbA, Rigidbody& rbB)
 {
     glm::vec3 sphereCenter = sphere.getAxis(3);
-    glm::vec3 relCenter = glm::vec3(glm::inverse(box.m_worldTransform) * glm::vec4(sphereCenter, 1.0f));
+    glm::vec3 relCenter =
+        glm::vec3(glm::inverse(box.m_worldTransform) * glm::vec4(sphereCenter, 1.0f));
 
     if (fabsf(relCenter.x) - sphere.m_radius > box.m_halfSize.x ||
         fabsf(relCenter.y) - sphere.m_radius > box.m_halfSize.y ||
         fabsf(relCenter.z) - sphere.m_radius > box.m_halfSize.z)
     {
-        return false;   
+        return false;
+    }
+
+    bool isTrigger = box.m_isTrigger || sphere.m_isTrigger;
+    if (isTrigger)
+    {
+        notifyTrigger(box.m_entity, sphere.m_entity);
+        return true;
     }
 
     glm::vec3 closestPoint(0.0f, 0.0f, 0.0f);
@@ -91,7 +119,7 @@ bool PhysicsSystem::boxAndSphere(const BoxCollider& box, const SphereCollider& s
     glm::vec3 closestPtWorld = glm::vec3(box.m_worldTransform * glm::vec4(closestPoint, 1.0f));
 
     Contact contact;
-    
+
     // Precaution when spheres center would be inside box (NaN)
     if (distance * distance < 0.0001f)
     {
@@ -101,7 +129,7 @@ bool PhysicsSystem::boxAndSphere(const BoxCollider& box, const SphereCollider& s
 
         if (glm::any(glm::isnan(contact.m_contactNormal)))
         {
-            contact.m_contactNormal = glm::vec3(0.0f, 1.0f, 0.0f);   
+            contact.m_contactNormal = glm::vec3(0.0f, 1.0f, 0.0f);
         }
         contact.m_penetration = sphere.m_radius;
     }
@@ -118,6 +146,7 @@ bool PhysicsSystem::boxAndSphere(const BoxCollider& box, const SphereCollider& s
     contact.m_restitution = (rbA.m_restitution + rbB.m_restitution) * 0.5f;
     contact.m_friction = (rbA.m_friction + rbB.m_friction) * 0.5f;
     m_contacts.push_back(contact);
+    notifyColliision(box.m_entity, sphere.m_entity);
     return true;
 }
 
@@ -131,7 +160,8 @@ float PhysicsSystem::transformToAxis(const BoxCollider& box, const glm::vec3& ax
 #define CHECK_OVERLAP(axis, index) \
     if (!tryAxis(boxA, boxB, (axis), toCenter, (index), pen, best)) return 0;
 
-bool PhysicsSystem::boxAndBox(const BoxCollider& boxA, const BoxCollider& boxB, Rigidbody& rbA, Rigidbody& rbB)
+bool PhysicsSystem::boxAndBox(const BoxCollider& boxA, const BoxCollider& boxB, Rigidbody& rbA,
+                              Rigidbody& rbB)
 {
     glm::vec3 toCenter = boxB.getAxis(3) - boxA.getAxis(3);
 
@@ -171,11 +201,17 @@ bool PhysicsSystem::boxAndBox(const BoxCollider& boxA, const BoxCollider& boxB, 
     else if (best < 6)
     {
         // Box one's vertex is one a face of box two.
-        fillPointFaceBoxBox(boxA, boxB, toCenter*-1.0f, best-3, pen);
+        fillPointFaceBoxBox(boxA, boxB, toCenter * -1.0f, best - 3, pen);
         return true;
     }
     else
     {
+        bool isTrigger = boxA.m_isTrigger || boxB.m_isTrigger;
+        if (isTrigger)
+        {
+            notifyTrigger(boxA.m_entity, boxB.m_entity);
+            return true;
+        }
         // Edge-edge contact
         best -= 6;
         // Normalize the axes.
@@ -192,21 +228,23 @@ bool PhysicsSystem::boxAndBox(const BoxCollider& boxA, const BoxCollider& boxB, 
         glm::vec3 ptOnTwoEdge = boxB.m_halfSize;
         for (size_t i = 0; i < 3; i++)
         {
-            if (i == oneAxisIndex) ptOnOneEdge[i] = 0;
-            else if (glm::dot(boxA.getAxis(i), axis) > 0) ptOnOneEdge[i] = -ptOnOneEdge[i];
+            if (i == oneAxisIndex)
+                ptOnOneEdge[i] = 0;
+            else if (glm::dot(boxA.getAxis(i), axis) > 0)
+                ptOnOneEdge[i] = -ptOnOneEdge[i];
 
-            if (i == twoAxisIndex) ptOnTwoEdge[i] = 0;
-            else if (glm::dot(boxB.getAxis(i), axis) < 0) ptOnTwoEdge[i] = -ptOnTwoEdge[i];
+            if (i == twoAxisIndex)
+                ptOnTwoEdge[i] = 0;
+            else if (glm::dot(boxB.getAxis(i), axis) < 0)
+                ptOnTwoEdge[i] = -ptOnTwoEdge[i];
         }
 
         ptOnOneEdge = boxA.m_worldTransform * glm::vec4(ptOnOneEdge, 1.0f);
         ptOnTwoEdge = boxB.m_worldTransform * glm::vec4(ptOnTwoEdge, 1.0f);
 
-        glm::vec3 vertex = contactPoint(
-            ptOnOneEdge, oneAxis, boxA.m_halfSize[oneAxisIndex],
-            ptOnTwoEdge, twoAxis, boxB.m_halfSize[twoAxisIndex],
-            bestSingleAxis > 2
-        );
+        glm::vec3 vertex =
+            contactPoint(ptOnOneEdge, oneAxis, boxA.m_halfSize[oneAxisIndex], ptOnTwoEdge, twoAxis,
+                         boxB.m_halfSize[twoAxisIndex], bestSingleAxis > 2);
 
         Contact contact;
         contact.m_penetration = pen;
@@ -216,8 +254,9 @@ bool PhysicsSystem::boxAndBox(const BoxCollider& boxA, const BoxCollider& boxB, 
         contact.m_body[0] = &rbA;
         contact.m_body[1] = &rbB;
         contact.m_friction = (rbA.m_friction + rbB.m_friction) * 0.5f;
-        contact.m_restitution= (rbA.m_restitution + rbB.m_restitution) * 0.5f;
+        contact.m_restitution = (rbA.m_restitution + rbB.m_restitution) * 0.5f;
         m_contacts.push_back(contact);
+        notifyColliision(boxA.m_entity, boxB.m_entity);
 
         return true;
     }
@@ -225,10 +264,9 @@ bool PhysicsSystem::boxAndBox(const BoxCollider& boxA, const BoxCollider& boxB, 
 }
 #undef CHECK_OVERLAP
 
-glm::vec3 PhysicsSystem::contactPoint(
-    const glm::vec3& pOne, const glm::vec3& dOne, float oneSize, 
-    const glm::vec3& pTwo, const glm::vec3& dTwo, float twoSize, 
-    bool useOne)
+glm::vec3 PhysicsSystem::contactPoint(const glm::vec3& pOne, const glm::vec3& dOne, float oneSize,
+                                      const glm::vec3& pTwo, const glm::vec3& dTwo, float twoSize,
+                                      bool useOne)
 {
     glm::vec3 toSt, cOne, cTwo;
     float dpStaOne, dpStaTwo, dpOneTwo, smOne, smTwo;
@@ -243,23 +281,19 @@ glm::vec3 PhysicsSystem::contactPoint(
     smTwo = glm::length2(dTwo);
     dpOneTwo = glm::dot(dTwo, dOne);
 
-    toSt = pOne - pTwo; // to start
+    toSt = pOne - pTwo;  // to start
     dpStaOne = glm::dot(dOne, toSt);
     dpStaTwo = glm::dot(dTwo, toSt);
 
     denom = smOne * smTwo - dpOneTwo * dpOneTwo;
 
     // Make sure that there is no divison by 0.
-    if (fabsf(denom) < 0.0001f) 
-        return useOne ? pOne : pTwo;
+    if (fabsf(denom) < 0.0001f) return useOne ? pOne : pTwo;
 
     mua = (dpOneTwo * dpStaTwo - smTwo * dpStaOne) / denom;
     mub = (smOne * dpStaTwo - dpOneTwo * dpStaOne) / denom;
 
-    if (mua > oneSize ||
-        mua < -oneSize ||
-        mub > twoSize ||
-        mub < -twoSize)
+    if (mua > oneSize || mua < -oneSize || mub > twoSize || mub < -twoSize)
     {
         return useOne ? pOne : pTwo;
     }
@@ -272,10 +306,9 @@ glm::vec3 PhysicsSystem::contactPoint(
     }
 }
 
-bool PhysicsSystem::tryAxis(
-    const BoxCollider& boxA, const BoxCollider& boxB, 
-    glm::vec3 axis, const glm::vec3& toCenter, unsigned int index, 
-    float& smallestPenetration, unsigned int& smallestCase)
+bool PhysicsSystem::tryAxis(const BoxCollider& boxA, const BoxCollider& boxB, glm::vec3 axis,
+                            const glm::vec3& toCenter, unsigned int index,
+                            float& smallestPenetration, unsigned int& smallestCase)
 {
     if (glm::length2(axis) < 0.0001f) return true;
     axis = glm::normalize(axis);
@@ -291,7 +324,8 @@ bool PhysicsSystem::tryAxis(
     return true;
 }
 
-float PhysicsSystem::penetrationOnAxis(const BoxCollider& boxA, const BoxCollider& boxB, const glm::vec3& axis, const glm::vec3& toCenter)
+float PhysicsSystem::penetrationOnAxis(const BoxCollider& boxA, const BoxCollider& boxB,
+                                       const glm::vec3& axis, const glm::vec3& toCenter)
 {
     float oneProject = transformToAxis(boxA, axis);
     float twoProject = transformToAxis(boxB, axis);
@@ -301,10 +335,16 @@ float PhysicsSystem::penetrationOnAxis(const BoxCollider& boxA, const BoxCollide
     return oneProject + twoProject - distance;
 }
 
-void PhysicsSystem::fillPointFaceBoxBox(
-    const BoxCollider& boxA, const BoxCollider& boxB, 
-    const glm::vec3& toCenter, unsigned int best, float pen)
+void PhysicsSystem::fillPointFaceBoxBox(const BoxCollider& boxA, const BoxCollider& boxB,
+                                        const glm::vec3& toCenter, unsigned int best, float pen)
 {
+    bool isTrigger = boxA.m_isTrigger || boxB.m_isTrigger;
+    if (isTrigger)
+    {
+        notifyTrigger(boxA.m_entity, boxB.m_entity);
+        return;
+    }
+
     glm::vec3 normal = boxA.getAxis(best);
     if (glm::dot(boxA.getAxis(best), toCenter) > 0)
     {
@@ -327,9 +367,10 @@ void PhysicsSystem::fillPointFaceBoxBox(
     contact.m_body[0] = bodyA;
     contact.m_body[1] = bodyB;
     contact.m_friction = (bodyA->m_friction + bodyB->m_friction) * 0.5f;
-    contact.m_restitution= (bodyA->m_restitution + bodyB->m_restitution) * 0.5f;
+    contact.m_restitution = (bodyA->m_restitution + bodyB->m_restitution) * 0.5f;
     m_contacts.push_back(contact);
-}   
+    notifyColliision(boxA.m_entity, boxB.m_entity);
+}
 
 bool PhysicsSystem::boxAndHalfspaceSimple(const BoxCollider& box, const PlaneCollider& plane)
 {
@@ -339,11 +380,19 @@ bool PhysicsSystem::boxAndHalfspaceSimple(const BoxCollider& box, const PlaneCol
     return boxDistance <= plane.m_offset;
 }
 
-bool PhysicsSystem::boxAndHalfspace(const BoxCollider& box, const PlaneCollider& plane, Rigidbody& rbA)
+bool PhysicsSystem::boxAndHalfspace(const BoxCollider& box, const PlaneCollider& plane,
+                                    Rigidbody& rbA)
 {
     if (!boxAndHalfspaceSimple(box, plane)) return false;
-    static float mults[8][3] = {{1,1,1},{-1,1,1},{1,-1,1},{-1,-1,1},
-                               {1,1,-1},{-1,1,-1},{1,-1,-1},{-1,-1,-1}};
+
+    bool isTrigger = box.m_isTrigger || plane.m_isTrigger;
+    if (isTrigger)
+    {
+        notifyTrigger(box.m_entity, plane.m_entity);
+        return true;
+    }
+    static float mults[8][3] = {{1, 1, 1},  {-1, 1, 1},  {1, -1, 1},  {-1, -1, 1},
+                                {1, 1, -1}, {-1, 1, -1}, {1, -1, -1}, {-1, -1, -1}};
 
     for (size_t i = 0; i < 8; i++)
     {
@@ -356,7 +405,7 @@ bool PhysicsSystem::boxAndHalfspace(const BoxCollider& box, const PlaneCollider&
         if (vertexDistance <= plane.m_offset)
         {
             Contact contact;
-            contact.m_contactPoint = vertexPos; 
+            contact.m_contactPoint = vertexPos;
             contact.m_contactNormal = plane.m_normal;
             contact.m_penetration = plane.m_offset - vertexDistance;
 
@@ -367,6 +416,7 @@ bool PhysicsSystem::boxAndHalfspace(const BoxCollider& box, const PlaneCollider&
             m_contacts.push_back(contact);
         }
     }
+    notifyColliision(box.m_entity, plane.m_entity);
     return true;
 }
 
@@ -396,12 +446,12 @@ void PhysicsSystem::generateContacts(std::vector<std::unique_ptr<Entity>>& entit
 
         if (!sphereA && !boxA && !planeA) continue;
 
-        Rigidbody* rbA = entityA->GetComponent<Rigidbody>(); 
+        Rigidbody* rbA = entityA->GetComponent<Rigidbody>();
         for (size_t j = i + 1; j < entities.size(); j++)
         {
             Entity* entityB = entities[j].get();
 
-            Rigidbody* rbB = entityB->GetComponent<Rigidbody>(); 
+            Rigidbody* rbB = entityB->GetComponent<Rigidbody>();
 
             if (!rbA && !rbB) continue;
 
@@ -409,36 +459,35 @@ void PhysicsSystem::generateContacts(std::vector<std::unique_ptr<Entity>>& entit
             BoxCollider* boxB = entityB->GetComponent<BoxCollider>();
             PlaneCollider* planeB = entityB->GetComponent<PlaneCollider>();
 
-
-            if (sphereA && sphereB) 
+            if (sphereA && sphereB)
             {
                 sphereAndSphere(*sphereA, *sphereB, *rbA, *rbB);
             }
-            else if (sphereA && planeB) 
+            else if (sphereA && planeB)
             {
                 sphereAndHalfspace(*sphereA, *planeB, *rbA);
             }
-            else if (planeA && sphereB) 
+            else if (planeA && sphereB)
             {
-                sphereAndHalfspace(*sphereB, *planeA, *rbB); 
+                sphereAndHalfspace(*sphereB, *planeA, *rbB);
             }
-            else if (boxA && planeB) 
+            else if (boxA && planeB)
             {
                 boxAndHalfspace(*boxA, *planeB, *rbA);
             }
-            else if (planeA && boxB) 
+            else if (planeA && boxB)
             {
                 boxAndHalfspace(*boxB, *planeA, *rbB);
             }
-            else if (sphereA && boxB) 
+            else if (sphereA && boxB)
             {
                 boxAndSphere(*boxB, *sphereA, *rbB, *rbA);
             }
-            else if (boxA && sphereB) 
+            else if (boxA && sphereB)
             {
                 boxAndSphere(*boxA, *sphereB, *rbA, *rbB);
             }
-            else if (boxA && boxB) 
+            else if (boxA && boxB)
             {
                 boxAndBox(*boxA, *boxB, *rbA, *rbB);
             }
@@ -447,20 +496,20 @@ void PhysicsSystem::generateContacts(std::vector<std::unique_ptr<Entity>>& entit
 
     for (Contact& c : m_contacts)
     {
-        Debug::addLine(c.m_contactPoint, c.m_contactPoint + c.m_contactNormal * 5.0f, glm::vec3(1.0f, 1.0f, 1.0f), 0.5f);
+        Debug::addLine(c.m_contactPoint, c.m_contactPoint + c.m_contactNormal * 5.0f,
+                       glm::vec3(1.0f, 1.0f, 1.0f), 0.5f);
     }
 }
 
 void PhysicsSystem::resolveContacts(float deltaTime)
 {
-    if (m_contacts.empty())
-        return;
-        
+    if (m_contacts.empty()) return;
+
     for (Contact& c : m_contacts)
     {
         c.calculateInternals(deltaTime);
     }
-    
+
     adjustPositions();
 
     adjustVelocities(deltaTime);
@@ -488,29 +537,31 @@ void PhysicsSystem::adjustPositions()
                 max = m_contacts[i].m_penetration;
                 index = i;
             }
-        }   
+        }
         if (index == numContacts) break;
 
         m_contacts[index].applyPositionChange(linearChange, angularChange, max);
 
-        // If body was moved, then other contact points which involved that body are outdated.
-        // Therefore we need to update contacts that belong to affected body.
+        // If body was moved, then other contact points which involved that body are
+        // outdated. Therefore we need to update contacts that belong to affected
+        // body.
         for (i = 0; i < numContacts; i++)
         {
             for (size_t b = 0; b < 2; b++)
             {
-                if (!m_contacts[i].m_body[b])
-                    continue;
+                if (!m_contacts[i].m_body[b]) continue;
 
                 for (size_t d = 0; d < 2; d++)
                 {
                     if (m_contacts[i].m_body[b] == m_contacts[index].m_body[d])
                     {
                         deltaPosition = linearChange[d] +
-                            glm::cross(angularChange[d],  m_contacts[i].m_relativeContactPosition[b]);
+                                        glm::cross(angularChange[d],
+                                                   m_contacts[i].m_relativeContactPosition[b]);
 
                         m_contacts[i].m_penetration +=
-                            glm::dot(deltaPosition, m_contacts[i].m_contactNormal) * (b ? 1.0f : -1.0f);
+                            glm::dot(deltaPosition, m_contacts[i].m_contactNormal) *
+                            (b ? 1.0f : -1.0f);
                     }
                 }
             }
@@ -542,24 +593,25 @@ void PhysicsSystem::adjustVelocities(float deltaTime)
 
         m_contacts[index].applyVelocityChange(velocityChange, rotationChange);
 
-        // Once we apply velocity change, if there are other bodies colliding with 
+        // Once we apply velocity change, if there are other bodies colliding with
         // affected body we need to update their contact velocities.
         for (size_t i = 0; i < numContacts; i++)
         {
             for (size_t b = 0; b < 2; b++)
             {
-                if (!m_contacts[i].m_body[b])
-                    continue;
+                if (!m_contacts[i].m_body[b]) continue;
 
                 for (size_t d = 0; d < 2; d++)
                 {
                     if (m_contacts[i].m_body[b] == m_contacts[index].m_body[d])
                     {
-                        deltaVel = velocityChange[d] + glm::cross(
-                            rotationChange[d], m_contacts[i].m_relativeContactPosition[b]);
+                        deltaVel = velocityChange[d] +
+                                   glm::cross(rotationChange[d],
+                                              m_contacts[i].m_relativeContactPosition[b]);
 
                         m_contacts[i].m_contactVelocity +=
-                            glm::transpose(m_contacts[i].m_contactToWorld) * deltaVel * (b ? -1.0f : 1.0f);
+                            glm::transpose(m_contacts[i].m_contactToWorld) * deltaVel *
+                            (b ? -1.0f : 1.0f);
                         m_contacts[i].calculateDesiredDeltaVelocity(deltaTime);
                     }
                 }
@@ -569,7 +621,7 @@ void PhysicsSystem::adjustVelocities(float deltaTime)
     }
 }
 
-void PhysicsSystem::update(const std::vector<std::unique_ptr<Entity>> &entities, float deltaTime)
+void PhysicsSystem::update(const std::vector<std::unique_ptr<Entity>>& entities, float deltaTime)
 {
     for (const std::unique_ptr<Entity>& entityPtr : entities)
     {
@@ -582,7 +634,7 @@ void PhysicsSystem::update(const std::vector<std::unique_ptr<Entity>> &entities,
 
         glm::vec3 acceleration = rb->m_forceAcc * rb->m_inverseMass;
         rb->m_velocity += acceleration * deltaTime;
-        
+
         glm::vec3 angularAcceleration = rb->m_invInertiaTensorWorld * rb->m_torqueAcc;
         rb->m_angularVelocity += angularAcceleration * deltaTime;
 
@@ -597,9 +649,26 @@ void PhysicsSystem::update(const std::vector<std::unique_ptr<Entity>> &entities,
         // Update inverse inertia tensor world due to objects rotation.
         glm::mat4 modelMatrix = transform->getModelMatrix();
         glm::mat3 rotationMatrix = glm::mat3(modelMatrix);
-        rb->m_invInertiaTensorWorld = rotationMatrix * rb->m_invInertiaTensor * glm::transpose(rotationMatrix);
+        rb->m_invInertiaTensorWorld =
+            rotationMatrix * rb->m_invInertiaTensor * glm::transpose(rotationMatrix);
 
         rb->m_forceAcc = glm::vec3(0.0f);
         rb->m_torqueAcc = glm::vec3(0.0f);
     }
+}
+
+void PhysicsSystem::notifyTrigger(Entity* entityA, Entity* entityB)
+{
+    if (!entityA || !entityB) return;
+
+    entityA->notifyTriggerEnter(entityB);
+    entityB->notifyTriggerEnter(entityA);
+}
+
+void PhysicsSystem::notifyColliision(Entity* entityA, Entity* entityB)
+{
+    if (!entityA || !entityB) return;
+
+    entityA->notifyCollisionEnter(entityB);
+    entityB->notifyCollisionEnter(entityA);
 }
