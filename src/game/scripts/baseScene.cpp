@@ -4,6 +4,7 @@
 #include "core/application.hpp"
 #include "core/debug.hpp"
 #include "footballer.hpp"
+#include "glm/ext/vector_float2.hpp"
 #include "graphics/model.hpp"
 #include "playerController.hpp"
 #include "scripts/ball.hpp"
@@ -11,10 +12,12 @@
 #include "world/components/meshRenderer.hpp"
 #include "world/components/rigidbody.hpp"
 #include "world/components/transform.hpp"
+#include "world/entity.hpp"
 #include "world/scene.hpp"
 
 void BaseScene::init()
 {
+    generateTerrain();
     Model tempMesh(PROJECT_DIR "assets/models/model.obj");
 
     Application& app = Application::Get();
@@ -49,17 +52,10 @@ void BaseScene::init()
     tempObjectTransform->setScale(glm::vec3(10.1f, 10.1f, 10.1f));
     tempObjectTransform->setPosition(glm::vec3(15.0f, 15.0f, 15.0f));
 
-    Entity& box = createEntity();
-    box.AddComponent<Transform>();
-    box.AddComponent<MeshRenderer>(std::make_shared<Model>(Mesh::createBox(
-                                       glm::vec3(55.0f, 1.0f, 54.0f), glm::vec3(0.2f, 0.5f, 0.2f))),
-                                   defaultShader);
-    box.AddComponent<HalfspaceCollider>(glm::vec3(0.0f, 1.0f, 0.0f), 0.0f);
-
     Entity& sphere = createEntity();
     sphere.AddComponent<Transform>();
-    sphere.AddComponent<MeshRenderer>(
-        std::make_shared<Model>(PROJECT_DIR "assets/models/sphere.obj"), defaultShader);
+    sphere.AddComponent<MeshRenderer>(std::make_shared<Model>(PROJECT_DIR "assets/models/ball.obj"),
+                                      defaultShader);
     sphere.GetComponent<Transform>()->setScale(glm::vec3(2.0f));
     sphere.GetComponent<Transform>()->setPosition(glm::vec3(0.0f, 5.0f, 0.0f));
     sphere.AddComponent<SphereCollider>(2.0f);
@@ -68,14 +64,6 @@ void BaseScene::init()
     sphereRb->m_invInertiaTensor = Rigidbody::createSphereInverseInertiaTensor(10.0f, 2.0f);
     sphere.AddComponent<Ball>();
 
-    /*Entity* sphere2 = new Entity();
-    sphere2->AddComponent<Transform>();
-    sphere2->AddComponent<MeshRenderer>(std::make_shared<Model>(PROJECT_DIR
-    "assets/models/sphere.obj")); sphere2->GetComponent<Transform>()->setScale(glm::vec3(2.0f));
-    sphere2->GetComponent<Transform>()->setPosition(glm::vec3(1.0f, 3.0f, 0.0f));
-    sphere2->AddComponent<SphereCollider>(2.0f);
-    sphere2->AddComponent<Rigidbody>(10.0f, 0.3f, 0.0f);
-    m_entities.push_back(std::unique_ptr<Entity>(sphere2));*/
     Entity& boxTwo = createEntity();
     boxTwo.AddComponent<Transform>();
     boxTwo.AddComponent<MeshRenderer>(
@@ -105,4 +93,57 @@ void BaseScene::fixedUpdate(float deltaTime)
 void BaseScene::draw()
 {
     Scene::draw();
+}
+
+void BaseScene::generateTerrain()
+{
+    Application& app = Application::Get();
+    Shader* defaultShader = app.getShader("default");
+
+    glm::vec2 pitchSize = glm::vec2(115, 74);
+    float wallHeight = 4.0f;
+
+    Entity& ground = createEntity();
+    ground.AddComponent<Transform>();
+    ground.AddComponent<MeshRenderer>(
+        std::make_shared<Model>(Mesh::createBox(glm::vec3(pitchSize.y, 0.0f, pitchSize.x),
+                                                glm::vec3(0.2f, 0.5f, 0.2f))),
+        defaultShader);
+    ground.AddComponent<HalfspaceCollider>(glm::vec3(0.0f, 1.0f, 0.0f), 0.0f);
+
+    Entity& wallA = createEntity();
+    Transform& transA = wallA.AddComponent<Transform>();
+    transA.setPosition(glm::vec3(0.0f, 0.0f, pitchSize.x / 2.0f));
+    wallA.AddComponent<MeshRenderer>(
+        std::make_shared<Model>(
+            Mesh::createBox(glm::vec3(pitchSize.y, wallHeight, 0.0f), glm::vec3(0.8f, 0.5f, 0.2f))),
+        defaultShader, glm::vec3(0.0f, wallHeight * 0.5f, 0.0f));
+    wallA.AddComponent<HalfspaceCollider>(glm::vec3(0.0f, 0.0f, -1.0f), -pitchSize.x / 2.0f);
+
+    Entity& wallB = createEntity();
+    Transform& transB = wallB.AddComponent<Transform>();
+    transB.setPosition(glm::vec3(pitchSize.y / 2.0f, 0.0f, 0.0f));
+    wallB.AddComponent<MeshRenderer>(
+        std::make_shared<Model>(
+            Mesh::createBox(glm::vec3(0.0f, wallHeight, pitchSize.x), glm::vec3(0.8f, 0.5f, 0.2f))),
+        defaultShader, glm::vec3(0.0f, wallHeight, 0.0f));
+    wallB.AddComponent<HalfspaceCollider>(glm::vec3(-1.0f, 0.0f, 0.0f), -pitchSize.y / 2.0f);
+
+    Entity& wallC = createEntity();
+    Transform& transC = wallC.AddComponent<Transform>();
+    transC.setPosition(glm::vec3(0.0f, 0.0f, -pitchSize.x / 2.0f));
+    wallC.AddComponent<MeshRenderer>(
+        std::make_shared<Model>(
+            Mesh::createBox(glm::vec3(pitchSize.y, wallHeight, 0.0f), glm::vec3(0.8f, 0.5f, 0.2f))),
+        defaultShader, glm::vec3(0.0f, wallHeight * 0.5f, 0.0f));
+    wallC.AddComponent<HalfspaceCollider>(glm::vec3(0.0f, 0.0f, 1.0f), -pitchSize.x / 2.0f);
+
+    Entity& wallD = createEntity();
+    Transform& transD = wallD.AddComponent<Transform>();
+    transD.setPosition(glm::vec3(-pitchSize.y / 2.0f, 0.0f, 0.0f));
+    wallD.AddComponent<MeshRenderer>(
+        std::make_shared<Model>(
+            Mesh::createBox(glm::vec3(0.0f, wallHeight, pitchSize.x), glm::vec3(0.8f, 0.5f, 0.2f))),
+        defaultShader, glm::vec3(0.0f, wallHeight, 0.0f));
+    wallD.AddComponent<HalfspaceCollider>(glm::vec3(1.0f, 0.0f, 0.0f), -pitchSize.y / 2.0f);
 }
