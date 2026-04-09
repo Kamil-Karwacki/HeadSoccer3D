@@ -2,13 +2,13 @@
 #include <vector>
 
 #include "world/entity.hpp"
-#include "world/components/camera.hpp"
 
 class RenderSystem
 {
-public:
+   public:
     RenderSystem(unsigned int whiteTextureId) : m_whiteTextureId(whiteTextureId)
-    {}
+    {
+    }
 
     void render(std::vector<std::unique_ptr<Entity>>& entities, Entity* cameraEntity);
 
