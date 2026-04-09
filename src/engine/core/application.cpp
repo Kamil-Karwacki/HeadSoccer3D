@@ -4,6 +4,7 @@
 
 #include <iostream>
 
+#include "GLFW/glfw3.h"
 #include "debug.hpp"
 #include "graphics/shader.hpp"
 #include "input.hpp"
@@ -24,6 +25,7 @@ Application::Application() : m_isRunning(true)
     m_inputManager->bindAction("back", GLFW_KEY_S);
     m_inputManager->bindAction("left", GLFW_KEY_A);
     m_inputManager->bindAction("right", GLFW_KEY_D);
+    m_inputManager->bindAction("space", GLFW_KEY_SPACE);
     loadShader("default", PROJECT_DIR "assets/shaders/default.vert",
                PROJECT_DIR "assets/shaders/default.frag");
     loadShader("lineDebug", PROJECT_DIR "assets/shaders/lineDebug.vert",
@@ -54,9 +56,7 @@ void Application::run()
 {
     glfwSetInputMode(m_window->getNativeWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-#ifdef DEBUG
     Shader* debugShader = getShader("lineDebug");
-#endif
 
     double accumulator = 0.0;
     const double fixedDeltaTime = 1.0 / 60.0;
@@ -87,13 +87,11 @@ void Application::run()
         }
         m_activeScene->draw();
 
-#ifdef DEBUG
         debugShader->use();
         debugShader->setMat4("view", 1, GL_FALSE, &m_activeScene->getMainViewMatrix()[0][0]);
         debugShader->setMat4("projection", 1, GL_FALSE,
                              &m_activeScene->getMainProjectionMatrix()[0][0]);
         Debug::render(*debugShader);
-#endif
 
         if (m_window->ShouldClose())
         {

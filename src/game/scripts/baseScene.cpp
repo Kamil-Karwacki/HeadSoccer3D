@@ -3,8 +3,10 @@
 #include "cameraController.hpp"
 #include "core/application.hpp"
 #include "core/debug.hpp"
+#include "footballer.hpp"
 #include "graphics/model.hpp"
 #include "playerController.hpp"
+#include "scripts/ball.hpp"
 #include "world/components/collider.hpp"
 #include "world/components/meshRenderer.hpp"
 #include "world/components/rigidbody.hpp"
@@ -19,7 +21,7 @@ void BaseScene::init()
     Shader* defaultShader = app.getShader("default");
 
     Entity& player = createEntity();
-    player.AddComponent<Transform>(glm::vec3(0, 3, 20));
+    player.AddComponent<Transform>(glm::vec3(0, 10, -19));
     player.AddComponent<PlayerController>();
     player.AddComponent<MeshRenderer>(
         std::make_shared<Model>(PROJECT_DIR "assets/models/sphere.obj"), defaultShader);
@@ -28,6 +30,11 @@ void BaseScene::init()
     player.AddComponent<SphereCollider>(2.0f);
     player.GetComponent<Rigidbody>()->m_invInertiaTensor =
         Rigidbody::createSphereInverseInertiaTensor(1.0f, 2.0f);
+    player.AddComponent<Footballer>();
+
+    glm::mat4 offset = glm::mat4(1.0f);
+    offset = glm::translate(offset, glm::vec3(0, 0, 2));
+    player.AddComponent<SphereCollider>(2.0f, offset, true);
 
     Entity& cameraPlayer = createEntity();
     cameraPlayer.AddComponent<Transform>();
@@ -47,18 +54,19 @@ void BaseScene::init()
     box.AddComponent<MeshRenderer>(std::make_shared<Model>(Mesh::createBox(
                                        glm::vec3(55.0f, 1.0f, 54.0f), glm::vec3(0.2f, 0.5f, 0.2f))),
                                    defaultShader);
-    box.AddComponent<PlaneCollider>(glm::vec3(0.0f, 1.0f, 0.0f), 0.0f);
+    box.AddComponent<HalfspaceCollider>(glm::vec3(0.0f, 1.0f, 0.0f), 0.0f);
 
     Entity& sphere = createEntity();
     sphere.AddComponent<Transform>();
     sphere.AddComponent<MeshRenderer>(
         std::make_shared<Model>(PROJECT_DIR "assets/models/sphere.obj"), defaultShader);
     sphere.GetComponent<Transform>()->setScale(glm::vec3(2.0f));
-    sphere.GetComponent<Transform>()->setPosition(glm::vec3(0.0f, 22.0f, 0.0f));
+    sphere.GetComponent<Transform>()->setPosition(glm::vec3(0.0f, 5.0f, 0.0f));
     sphere.AddComponent<SphereCollider>(2.0f);
-    sphere.AddComponent<Rigidbody>(10.0f, 0.3f, 30.0f, 0.85f, 0.8f);
+    sphere.AddComponent<Rigidbody>(1.0f, 0.3f, 30.0f, 0.95f, 0.8f);
     Rigidbody* sphereRb = sphere.GetComponent<Rigidbody>();
     sphereRb->m_invInertiaTensor = Rigidbody::createSphereInverseInertiaTensor(10.0f, 2.0f);
+    sphere.AddComponent<Ball>();
 
     /*Entity* sphere2 = new Entity();
     sphere2->AddComponent<Transform>();

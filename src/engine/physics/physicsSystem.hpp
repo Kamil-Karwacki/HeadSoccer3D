@@ -1,21 +1,23 @@
 #pragma once
 #include "contact.hpp"
 #include "world/components/collider.hpp"
+#include "world/components/rigidbody.hpp"
 #include "world/entity.hpp"
 
 class PhysicsSystem
 {
    public:
-    bool sphereAndSphere(const SphereCollider& one, const SphereCollider& two, Rigidbody& rbA,
-                         Rigidbody& rbB);
-    bool sphereAndHalfspace(const SphereCollider& sphere, const PlaneCollider& plane,
-                            Rigidbody& rbA);
-    bool boxAndSphere(const BoxCollider& box, const SphereCollider& sphere, Rigidbody& rbA,
-                      Rigidbody& rbB);
-    bool boxAndBox(const BoxCollider& boxA, const BoxCollider& boxB, Rigidbody& rbA,
-                   Rigidbody& rbB);
-    bool boxAndHalfspaceSimple(const BoxCollider& box, const PlaneCollider& plane);
-    bool boxAndHalfspace(const BoxCollider& box, const PlaneCollider& plane, Rigidbody& rbA);
+    bool sphereAndSphere(SphereCollider& one, SphereCollider& two, Rigidbody* rbA, Rigidbody* rbB);
+    bool sphereAndHalfspace(SphereCollider& sphere, HalfspaceCollider& plane, Rigidbody* rbA,
+                            Rigidbody* rbB);
+    bool boxAndSphere(BoxCollider& box, SphereCollider& sphere, Rigidbody* rbA, Rigidbody* rbB);
+    bool boxAndBox(BoxCollider& boxA, BoxCollider& boxB, Rigidbody* rbA, Rigidbody* rbB);
+    bool boxAndHalfspaceSimple(const BoxCollider& box, const HalfspaceCollider& plane);
+    bool boxAndHalfspace(BoxCollider& box, HalfspaceCollider& plane, Rigidbody* rbA,
+                         Rigidbody* rbB);
+
+    void setBodyData(Contact& contact, Rigidbody* rbA, Rigidbody* rbB);
+    void swapBodies(Contact& contact);
     void generateContacts(std::vector<std::unique_ptr<Entity>>& entities);
     std::vector<Contact> getContacts()
     {
@@ -32,8 +34,8 @@ class PhysicsSystem
 
     void update(const std::vector<std::unique_ptr<Entity>>& entities, float deltaTime);
 
-    void notifyTrigger(Entity* entityA, Entity* entityB);
-    void notifyColliision(Entity* entityA, Entity* entityB);
+    void notifyTrigger(Collider* colliderA, Collider* colliderB);
+    void notifyColliision(Collider* colliderA, Collider* colliderB);
 
    private:
     std::vector<Contact> m_contacts;
@@ -77,7 +79,7 @@ class PhysicsSystem
     /// @param toCenter direction vector from boxB to boxA
     /// @param best index of the axis
     /// @param pen penetration
-    void fillPointFaceBoxBox(const BoxCollider& boxA, const BoxCollider& boxB,
+    void fillPointFaceBoxBox(BoxCollider& boxA, BoxCollider& boxB, Rigidbody* rbA, Rigidbody* rbB,
                              const glm::vec3& toCenter, unsigned int best, float pen);
 
     /// @brief Finds closest point between edges of two boxes

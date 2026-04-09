@@ -1,5 +1,6 @@
 #include "contact.hpp"
 
+#include "world/components/rigidbody.hpp"
 #include "world/components/transform.hpp"
 #include "world/entity.hpp"
 #define GLM_ENABLE_EXPERIMENTAL

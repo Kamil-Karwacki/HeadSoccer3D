@@ -32,14 +32,27 @@ class Entity
         return nullptr;
     }
 
-    void notifyTriggerEnter(Entity* other)
+    template <typename T>
+    std::vector<T*> GetComponents()
     {
-        for (Behaviour* script : m_behaviours) script->onTriggerEnter(other);
+        std::vector<T*> result;
+        for (auto& component : m_components)
+        {
+            T* ptr = dynamic_cast<T*>(component.get());
+            if (!ptr) continue;
+            result.push_back(ptr);
+        }
+        return result;
     }
 
-    void notifyCollisionEnter(Entity* other)
+    void notifyTriggerEnter(Collider* otherCollider)
     {
-        for (Behaviour* script : m_behaviours) script->onCollisionEnter(other);
+        for (Behaviour* script : m_behaviours) script->onTriggerEnter(otherCollider);
+    }
+
+    void notifyCollisionEnter(Collider* otherCollider)
+    {
+        for (Behaviour* script : m_behaviours) script->onCollisionEnter(otherCollider);
     }
 
    private:
