@@ -1,14 +1,16 @@
 #pragma once
 #include <glm/glm.hpp>
+
 #include "world/behaviour.hpp"
 
 class PlayerController : public Behaviour
 {
-public:
+   public:
     void onStart() override;
     void onUpdate(float deltaTime) override;
     virtual ~PlayerController() override = default;
 
-private:
+   private:
     float m_yaw = 0.0f;
+    float m_pitch = 0.0f;
 };
