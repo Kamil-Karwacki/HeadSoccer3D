@@ -9,40 +9,24 @@
 
 void Contact::calculateContactBasis()
 {
-    glm::vec3 contactTanget[2];
+    glm::vec3 contactTangent[2];
 
     // Check which axis normal vector is farthest from, then use that axis in cross product
+    // so that we do not create zero vector
     if (fabsf(m_contactNormal.x) > fabsf(m_contactNormal.y))
     {
-        // Calculate inverse of length so result can be normalized.
-        const float s = 1.0f / sqrt(m_contactNormal.z * m_contactNormal.z +
-                                    m_contactNormal.x * m_contactNormal.x);
-
-        contactTanget[0].x = m_contactNormal.z * s;
-        contactTanget[0].y = 0;
-        contactTanget[0].z = -m_contactNormal.x * s;
-
-        contactTanget[1].x = m_contactNormal.y * contactTanget[0].x;
-        contactTanget[1].y =
-            m_contactNormal.z * contactTanget[0].x - m_contactNormal.x * contactTanget[0].z;
-        contactTanget[1].z = -m_contactNormal.y * contactTanget[0].x;
+        contactTangent[0] =
+            glm::normalize(glm::cross(glm::vec3(0.0f, 1.0f, 0.0f), m_contactNormal));
     }
     else
     {
-        // Calculate inverse of length so result can be normalized.
-        const float s = 1.0f / sqrt(m_contactNormal.z * m_contactNormal.z +
-                                    m_contactNormal.y * m_contactNormal.y);
-
-        contactTanget[0].x = 0;
-        contactTanget[0].y = -m_contactNormal.z * s;
-        contactTanget[0].z = m_contactNormal.y * s;
-
-        contactTanget[1].x =
-            m_contactNormal.y * contactTanget[0].z - m_contactNormal.z * contactTanget[0].y;
-        contactTanget[1].y = -m_contactNormal.x * contactTanget[0].z;
-        contactTanget[1].z = m_contactNormal.x * contactTanget[0].y;
+        contactTangent[0] =
+            glm::normalize(glm::cross(glm::vec3(1.0f, 0.0f, 0.0f), m_contactNormal));
     }
-    m_contactToWorld = glm::mat3(m_contactNormal, contactTanget[0], contactTanget[1]);
+
+    contactTangent[1] = glm::cross(m_contactNormal, contactTangent[0]);
+
+    m_contactToWorld = glm::mat3(m_contactNormal, contactTangent[0], contactTangent[1]);
 }
 
 void Contact::calculateInternals(float deltaTime)
@@ -269,6 +253,16 @@ glm::vec3 Contact::calculateFrictionImpulse()
     deltaVelocity[2][2] += inverseMass;
 
     glm::mat3 impulseMatrix = glm::inverse(deltaVelocity);
+
+    const float velocityEpsilon = 0.1f;
+    float planarVelocitySq =
+        m_contactVelocity.y * m_contactVelocity.y + m_contactVelocity.z * m_contactVelocity.z;
+
+    if (planarVelocitySq < velocityEpsilon * velocityEpsilon)
+    {
+        m_contactVelocity.y = 0.0f;
+        m_contactVelocity.z = 0.0f;
+    }
 
     // This vector is used for static friction.
     glm::vec3 velKill(m_desiredDeltaVelocity, -m_contactVelocity.y, -m_contactVelocity.z);
