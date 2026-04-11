@@ -438,12 +438,12 @@ void PhysicsSystem::generateContacts(std::vector<std::unique_ptr<Entity>>& entit
 
     for (auto& entity : entities)
     {
+        Transform* transform = entity->GetComponent<Transform>();
+        if (!transform) continue;
+
         std::vector<TransformableCollider*> colliders =
             entity->GetComponents<TransformableCollider>();
         if (colliders.empty()) continue;
-
-        Transform* transform = entity->GetComponent<Transform>();
-        if (!transform) continue;
 
         for (auto& collider : colliders)
         {

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.15)
 
-project(Projekt_GK 
-        VERSION 1.0 
+project(Projekt_GK
+        VERSION 1.0
         LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -71,6 +71,8 @@ target_sources(${PROJECT_NAME} PRIVATE
     src/game/scripts/playerController.cpp
     src/game/scripts/baseScene.cpp
     src/game/scripts/cameraController.cpp
+    src/game/scripts/footballer.cpp
+    src/game/scripts/ball.cpp
     src/third_party/stb_implementation.cpp
     src/third_party/tinyobjloader_implementation.cpp
     src/main.cpp
@@ -78,17 +80,17 @@ target_sources(${PROJECT_NAME} PRIVATE
 
 target_compile_options(${PROJECT_NAME} PRIVATE ${COMPILER_WARNINGS})
 
-target_include_directories(${PROJECT_NAME} PRIVATE 
+target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/engine
     ${CMAKE_CURRENT_SOURCE_DIR}/src/game
     ${CMAKE_CURRENT_SOURCE_DIR}/src/third_party
     ${stb_SOURCE_DIR}
 )
 
-target_link_libraries(${PROJECT_NAME} PRIVATE 
+target_link_libraries(${PROJECT_NAME} PRIVATE
     glfw
     glm::glm
-    glad 
+    glad
     tinyobjloader
 )
 

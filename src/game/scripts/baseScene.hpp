@@ -3,12 +3,13 @@
 
 class BaseScene : public Scene
 {
-public:    
+   public:
     using Scene::Scene;
     void init() override;
     void update(float deltaTime) override;
     void fixedUpdate(float deltaTime) override;
     void draw() override;
+    void generateTerrain();
 
-private:
+   private:
 };

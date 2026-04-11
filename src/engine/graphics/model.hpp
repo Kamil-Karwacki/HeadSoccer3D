@@ -1,16 +1,17 @@
 #pragma once
-#include "mesh.hpp"
-#include <vector>
 #include <string>
+#include <vector>
 
-class Model 
+#include "mesh.hpp"
+
+class Model
 {
-public:
+   public:
     Model(const std::string& path);
     Model(Mesh mesh);
     void draw(Shader& shader, unsigned int whiteTextureID);
 
-private:
+   private:
     std::vector<Mesh> m_meshes;
     void loadModel(const std::string& path);
 };

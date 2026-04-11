@@ -1,13 +1,15 @@
 #pragma once
 #define GLM_ENABLE_EXPERIMENTAL
+#include <functional>
 #include <glm/glm.hpp>
 #include <glm/gtx/hash.hpp>
-#include <vector>
 #include <string>
-#include "shader.hpp"
-#include <functional>
+#include <vector>
 
-struct Vertex {
+#include "shader.hpp"
+
+struct Vertex
+{
     glm::vec3 position;
     glm::vec3 normal;
     glm::vec2 texCoords;
@@ -19,42 +21,48 @@ struct Vertex {
     }
 };
 
-namespace std {
-    template<> struct hash<Vertex> {
-        size_t operator()(Vertex const& vertex) const {
-            size_t seed = 0;
-            auto hash_combine = [](size_t& seed, size_t hash_val) {
-                seed ^= hash_val + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-            };
+namespace std
+{
+template <>
+struct hash<Vertex>
+{
+    size_t operator()(Vertex const& vertex) const
+    {
+        size_t seed = 0;
+        auto hash_combine = [](size_t& seed, size_t hash_val)
+        { seed ^= hash_val + 0x9e3779b9 + (seed << 6) + (seed >> 2); };
 
-            hash_combine(seed, std::hash<glm::vec3>()(vertex.position));
-            hash_combine(seed, std::hash<glm::vec3>()(vertex.normal));
-            hash_combine(seed, std::hash<glm::vec2>()(vertex.texCoords));
-            hash_combine(seed, std::hash<glm::vec3>()(vertex.color));
+        hash_combine(seed, std::hash<glm::vec3>()(vertex.position));
+        hash_combine(seed, std::hash<glm::vec3>()(vertex.normal));
+        hash_combine(seed, std::hash<glm::vec2>()(vertex.texCoords));
+        hash_combine(seed, std::hash<glm::vec3>()(vertex.color));
 
-            return seed;
-        }
-    };
-}
+        return seed;
+    }
+};
+}  // namespace std
 
-struct Texture {
+struct Texture
+{
     unsigned int id;
     std::string type;
 };
 
 class Mesh
 {
-public:
+   public:
     std::vector<Vertex> m_vertices;
     std::vector<unsigned int> m_indices;
     std::vector<Texture> m_textures;
     Mesh() = default;
-    Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures);
+    Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices,
+         std::vector<Texture> textures);
     ~Mesh() = default;
 
     static Mesh createBox(const glm::vec3& size, const glm::vec3& color);
     void draw(Shader& shader, unsigned int whiteTextureID);
-private:
+
+   private:
     unsigned int m_VAO, m_VBO, m_EBO;
     void setupMesh();
 };
