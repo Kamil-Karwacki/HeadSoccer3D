@@ -48,9 +48,13 @@ void PlayerController::onUpdate(float deltaTime)
     }
 
     float mouseDeltaX = static_cast<float>(manager.getMouseDeltaX());
+    float mouseDeltaY = static_cast<float>(manager.getMouseDeltaY());
 
-    float mouseSensitivity = 0.001f;
+    float mouseSensitivity = 0.003f;
     m_yaw += mouseDeltaX * mouseSensitivity;
+    m_pitch += mouseDeltaY * mouseSensitivity;
+    if (m_pitch > 0.45f) m_pitch = 0.45f;
+    if (m_pitch < -0.45f) m_pitch = -0.45f;
 
-    footballer->m_angularInput = m_yaw;
+    footballer->m_rotation = glm::vec2(m_pitch, m_yaw);
 }

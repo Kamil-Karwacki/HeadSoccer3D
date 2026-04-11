@@ -39,8 +39,10 @@ void Footballer::kickBall()
 
     if (manager.isActionPressed("space"))
     {
-        glm::vec3 kickDir = glm::normalize(
-            (ballTrans->getPosition() + glm::vec3(0.0f, 3.0f, 0.0f)) - transform->getPosition());
+        glm::vec3 front = transform->getFront();
+        front.y *= -2.5f;
+        glm::vec3 kickDir =
+            glm::normalize((ballTrans->getPosition() + front) - transform->getPosition());
         ballRb->m_forceAcc += m_kickStrength * kickDir;
     }
 }
@@ -54,13 +56,15 @@ void Footballer::move(float deltaTime)
 
     glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
 
+    transform->setRotation(glm::vec3(0.0f, -m_rotation.y, 0.0f));
     glm::vec3 front = transform->getFront();
+
+    transform->setRotation(glm::vec3(-m_rotation.x, -m_rotation.y, 0.0f));
 
     rigidbody->m_forceAcc += -front * deltaTime * m_speed * rigidbody->getMass() * m_input.y;
     rigidbody->m_forceAcc +=
         -glm::cross(front, up) * deltaTime * m_speed * rigidbody->getMass() * m_input.x;
 
-    transform->setRotation(glm::vec3(0.0f, -m_angularInput, 0.0f));
     m_input = glm::vec2(0.0f, 0.0f);
-    m_angularInput = 0.0f;
+    m_rotation = glm::vec2(0.0f);
 }

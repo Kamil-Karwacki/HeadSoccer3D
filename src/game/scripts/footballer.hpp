@@ -16,7 +16,7 @@ class Footballer : public Behaviour
     void move(float deltaTime);
 
     glm::vec2 m_input = glm::vec2(0.0f);
-    float m_angularInput = 0.0f;
+    glm::vec2 m_rotation = glm::vec2(0.0f);
 
    private:
     Ball* m_ball = nullptr;
