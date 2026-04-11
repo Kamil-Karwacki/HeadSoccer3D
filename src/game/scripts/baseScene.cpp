@@ -5,6 +5,8 @@
 #include "core/debug.hpp"
 #include "footballer.hpp"
 #include "glm/ext/vector_float2.hpp"
+#include "glm/ext/vector_float3.hpp"
+#include "glm/trigonometric.hpp"
 #include "graphics/model.hpp"
 #include "playerController.hpp"
 #include "scripts/ball.hpp"
@@ -88,6 +90,12 @@ void BaseScene::update(float deltaTime)
 void BaseScene::fixedUpdate(float deltaTime)
 {
     Scene::fixedUpdate(deltaTime);
+
+    for (int i = 1; i < 5; i++)
+    {
+        Transform* t = m_entities[i]->GetComponent<Transform>();
+        // t->addRotation(deltaTime * glm::vec3(0, 1, 0));
+    }
 }
 
 void BaseScene::draw()
@@ -102,6 +110,7 @@ void BaseScene::generateTerrain()
 
     glm::vec2 pitchSize = glm::vec2(115, 74);
     float wallHeight = 4.0f;
+    float bannerLength = 32.0f;
 
     Entity& ground = createEntity();
     ground.AddComponent<Transform>();
@@ -111,15 +120,67 @@ void BaseScene::generateTerrain()
         defaultShader);
     ground.AddComponent<HalfspaceCollider>(glm::vec3(0.0f, 1.0f, 0.0f), 0.0f);
 
-    Entity& wallA = createEntity();
-    Transform& transA = wallA.AddComponent<Transform>();
-    transA.setPosition(glm::vec3(0.0f, 0.0f, pitchSize.x / 2.0f));
-    wallA.AddComponent<MeshRenderer>(
-        std::make_shared<Model>(
-            Mesh::createBox(glm::vec3(pitchSize.y, wallHeight, 0.0f), glm::vec3(0.8f, 0.5f, 0.2f))),
-        defaultShader, glm::vec3(0.0f, wallHeight * 0.5f, 0.0f));
-    wallA.AddComponent<HalfspaceCollider>(glm::vec3(0.0f, 0.0f, -1.0f), -pitchSize.x / 2.0f);
+    glm::vec2 bannerCount = glm::round(pitchSize / bannerLength);
+    glm::vec2 bannerLengths = pitchSize / bannerCount;
+    glm::vec2 bannerScale = bannerLengths / bannerLength;
+    for (size_t i = 0; i < bannerCount.y; i++)
+    {
+        // top
+        Entity& wallA = createEntity();
+        Transform& transA = wallA.AddComponent<Transform>();
+        transA.setPosition(
+            glm::vec3((pitchSize.y / 2.0f) - (bannerLengths.y / 2.0f) - bannerLengths.y * i, 0.0f,
+                      pitchSize.x / 2.0f));
+        transA.setScale(glm::vec3(bannerScale.y, 1.0f, 1.0f));
+        transA.setRotation(glm::vec3(glm::radians(90.0f), glm::radians(180.0f), 0));
+        wallA.AddComponent<MeshRenderer>(
+            std::make_shared<Model>(PROJECT_DIR "assets/models/baner1.obj"), defaultShader,
+            glm::vec3(0.0f, wallHeight / 2.0f, 0.0f));
+        wallA.AddComponent<HalfspaceCollider>(glm::vec3(0.0f, 0.0f, -1.0f), -pitchSize.x / 2.0f);
 
+        // bottom
+        Entity& wallB = createEntity();
+        Transform& transB = wallB.AddComponent<Transform>();
+        transB.setPosition(
+            glm::vec3((pitchSize.y / 2.0f) - (bannerLengths.y / 2.0f) - bannerLengths.y * i, 0.0f,
+                      -pitchSize.x / 2.0f));
+        transB.setScale(glm::vec3(bannerScale.y, 1.0f, 1.0f));
+        transB.setRotation(glm::vec3(glm::radians(90.0f), glm::radians(180.0f), 0));
+        wallB.AddComponent<MeshRenderer>(
+            std::make_shared<Model>(PROJECT_DIR "assets/models/baner1.obj"), defaultShader,
+            glm::vec3(0.0f, wallHeight / 2.0f, 0.0f));
+        wallB.AddComponent<HalfspaceCollider>(glm::vec3(0.0f, 0.0f, 1.0f), -pitchSize.x / 2.0f);
+    }
+
+    for (size_t i = 0; i < bannerCount.x; i++)
+    {
+        // left
+        Entity& wallA = createEntity();
+        Transform& transA = wallA.AddComponent<Transform>();
+        transA.setPosition(
+            glm::vec3(pitchSize.y / 2.0f, 0.0f,
+                      (-pitchSize.x / 2.0f) + (bannerLengths.x / 2.0f) + bannerLengths.x * i));
+        transA.setScale(glm::vec3(bannerScale.x, 1.0f, 1.0f));
+        transA.setRotation(glm::vec3(glm::radians(90.0f), glm::radians(270.0f), 0));
+        wallA.AddComponent<MeshRenderer>(
+            std::make_shared<Model>(PROJECT_DIR "assets/models/baner1.obj"), defaultShader,
+            glm::vec3(0.0f, wallHeight / 2.0f, 0.0f));
+        wallA.AddComponent<HalfspaceCollider>(glm::vec3(-1.0f, 0.0f, 0.0f), -pitchSize.y / 2.0f);
+
+        // right
+        Entity& wallB = createEntity();
+        Transform& transB = wallB.AddComponent<Transform>();
+        transB.setPosition(
+            glm::vec3(-pitchSize.y / 2.0f, 0.0f,
+                      (-pitchSize.x / 2.0f) + (bannerLengths.x / 2.0f) + bannerLengths.x * i));
+        transB.setScale(glm::vec3(bannerScale.x, 1.0f, 1.0f));
+        transB.setRotation(glm::vec3(glm::radians(90.0f), glm::radians(90.0f), 0));
+        wallB.AddComponent<MeshRenderer>(
+            std::make_shared<Model>(PROJECT_DIR "assets/models/baner1.obj"), defaultShader,
+            glm::vec3(0.0f, wallHeight / 2.0f, 0.0f));
+        wallB.AddComponent<HalfspaceCollider>(glm::vec3(1.0f, 0.0f, 0.0f), -pitchSize.y / 2.0f);
+    }
+    return;
     Entity& wallB = createEntity();
     Transform& transB = wallB.AddComponent<Transform>();
     transB.setPosition(glm::vec3(pitchSize.y / 2.0f, 0.0f, 0.0f));
@@ -129,7 +190,7 @@ void BaseScene::generateTerrain()
         defaultShader, glm::vec3(0.0f, wallHeight, 0.0f));
     wallB.AddComponent<HalfspaceCollider>(glm::vec3(-1.0f, 0.0f, 0.0f), -pitchSize.y / 2.0f);
 
-    Entity& wallC = createEntity();
+    /*Entity& wallC = createEntity();
     Transform& transC = wallC.AddComponent<Transform>();
     transC.setPosition(glm::vec3(0.0f, 0.0f, -pitchSize.x / 2.0f));
     wallC.AddComponent<MeshRenderer>(
@@ -137,7 +198,7 @@ void BaseScene::generateTerrain()
             Mesh::createBox(glm::vec3(pitchSize.y, wallHeight, 0.0f), glm::vec3(0.8f, 0.5f, 0.2f))),
         defaultShader, glm::vec3(0.0f, wallHeight * 0.5f, 0.0f));
     wallC.AddComponent<HalfspaceCollider>(glm::vec3(0.0f, 0.0f, 1.0f), -pitchSize.x / 2.0f);
-
+*/
     Entity& wallD = createEntity();
     Transform& transD = wallD.AddComponent<Transform>();
     transD.setPosition(glm::vec3(-pitchSize.y / 2.0f, 0.0f, 0.0f));

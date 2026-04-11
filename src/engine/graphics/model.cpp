@@ -5,6 +5,7 @@
 #include <iostream>
 #include <unordered_map>
 
+#include "glm/ext/vector_float3.hpp"
 #include "stb_image.h"
 #include "tiny_obj_loader.h"
 
@@ -65,6 +66,12 @@ void Model::loadModel(const std::string& path)
             {
                 face_color = glm::vec3(materials[mat_id].diffuse[0], materials[mat_id].diffuse[1],
                                        materials[mat_id].diffuse[2]);
+
+                if (face_color == glm::vec3(0.0f, 0.0f, 0.0f) &&
+                    !materials[mat_id].diffuse_texname.empty())
+                {
+                    face_color = glm::vec3(1.0f);
+                }
             }
 
             for (size_t v = 0; v < fv; v++)
@@ -124,13 +131,18 @@ void Model::loadModel(const std::string& path)
             stbi_set_flip_vertically_on_load(true);
             int width, height, nrChannels;
             unsigned char* data = stbi_load(fullPath.c_str(), &width, &height, &nrChannels, 4);
-
             if (data)
             {
                 glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
                 glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
                              data);
                 glGenerateMipmap(GL_TEXTURE_2D);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
                 meshDataList[i].textures.push_back(texture);
             }
             else
@@ -139,7 +151,6 @@ void Model::loadModel(const std::string& path)
             }
             stbi_image_free(data);
         }
-
         m_meshes.push_back(
             Mesh(meshDataList[i].vertices, meshDataList[i].indices, meshDataList[i].textures));
     }
