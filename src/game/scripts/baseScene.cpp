@@ -48,14 +48,6 @@ void BaseScene::init()
     m_mainCamera = &cameraPlayer.AddComponent<Camera>();
     cameraPlayer.AddComponent<CameraController>(&player);
 
-    Entity& tempObject = createEntity();
-    tempObject.AddComponent<Transform>();
-    tempObject.AddComponent<MeshRenderer>(std::make_shared<Model>(tempMesh), defaultShader);
-
-    Transform* tempObjectTransform = tempObject.GetComponent<Transform>();
-    tempObjectTransform->setScale(glm::vec3(10.1f, 10.1f, 10.1f));
-    tempObjectTransform->setPosition(glm::vec3(15.0f, 15.0f, 15.0f));
-
     Entity& sphere = createEntity();
     sphere.AddComponent<Transform>();
     sphere.AddComponent<MeshRenderer>(std::make_shared<Model>(PROJECT_DIR "assets/models/ball.obj"),
@@ -67,19 +59,6 @@ void BaseScene::init()
     Rigidbody* sphereRb = sphere.GetComponent<Rigidbody>();
     sphereRb->m_invInertiaTensor = Rigidbody::createSphereInverseInertiaTensor(10.0f, 2.0f);
     sphere.AddComponent<Ball>();
-
-    Entity& boxTwo = createEntity();
-    boxTwo.AddComponent<Transform>();
-    boxTwo.AddComponent<MeshRenderer>(
-        std::make_shared<Model>(
-            Mesh::createBox(glm::vec3(5.0f, 5.0f, 5.0f), glm::vec3(0.8f, 0.2f, 0.2f))),
-        defaultShader);
-    boxTwo.GetComponent<Transform>()->setPosition(glm::vec3(4.0f, 6.0f, 1.0f));
-    boxTwo.GetComponent<Transform>()->setRotation(glm::vec3(3));
-    boxTwo.AddComponent<BoxCollider>(glm::vec3(2.5f, 2.5f, 2.5f));
-    Rigidbody* boxRb = &boxTwo.AddComponent<Rigidbody>(10.0f, 0.3f, 3.0f, 0.5f, 0.5f);
-    boxRb->m_invInertiaTensor =
-        Rigidbody::createBoxInverseInertiaTensor(boxRb->getMass(), 5.0f, 5.0f, 5.0f);
 
     std::cout << "Scene initialized successfully\n";
 }
@@ -191,7 +170,7 @@ void BaseScene::generateTerrain()
             wallB.AddComponent<HalfspaceCollider>(glm::vec3(1.0f, 0.0f, 0.0f), -pitchSize.y / 2.0f);
     }
 
-    glm::vec3 gateSize = glm::vec3(22.0f, 5.0f, 7.0f);
+    glm::vec3 gateSize = glm::vec3(22.0f, 7.0f, 7.0f);
     float gateThickness = 0.7f;
 
     for (int i = 1; i > -2; i -= 2)
