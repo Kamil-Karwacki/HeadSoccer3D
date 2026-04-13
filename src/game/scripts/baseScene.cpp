@@ -23,7 +23,7 @@
 void BaseScene::init()
 {
     generateTerrain();
-    Model tempMesh(PROJECT_DIR "assets/models/model.obj");
+    Model tempMesh("assets/models/model.obj");
 
     Application &app = Application::Get();
     Shader *defaultShader = app.getShader("default");
@@ -32,8 +32,7 @@ void BaseScene::init()
     player.AddComponent<Transform>(glm::vec3(0, 10, -19));
     player.AddComponent<PlayerController>();
     player.AddComponent<MeshRenderer>(
-        std::make_shared<Model>(PROJECT_DIR "assets/models/sphere.obj"),
-        defaultShader);
+        std::make_shared<Model>("assets/models/sphere.obj"), defaultShader);
     player.AddComponent<PlayerController>();
     player.AddComponent<Rigidbody>(1.0f, 0.1f, 0.5f, 0.9f, 0.9f);
     player.AddComponent<SphereCollider>(2.0f);
@@ -53,8 +52,7 @@ void BaseScene::init()
     Entity &sphere = createEntity();
     sphere.AddComponent<Transform>();
     sphere.AddComponent<MeshRenderer>(
-        std::make_shared<Model>(PROJECT_DIR "assets/models/ball.obj"),
-        defaultShader);
+        std::make_shared<Model>("assets/models/ball.obj"), defaultShader);
     sphere.GetComponent<Transform>()->setScale(glm::vec3(2.0f));
     sphere.GetComponent<Transform>()->setPosition(glm::vec3(0.0f, 5.0f, 0.0f));
     sphere.AddComponent<SphereCollider>(2.0f);
@@ -111,7 +109,7 @@ void BaseScene::generateTerrain()
     ground.AddComponent<HalfspaceCollider>(glm::vec3(0.0f, 1.0f, 0.0f), 0.0f);
 
     std::shared_ptr<Model> bannerModelA =
-        std::make_shared<Model>(PROJECT_DIR "assets/models/baner1.obj");
+        std::make_shared<Model>("assets/models/baner1.obj");
     glm::vec2 bannerCount = glm::round(pitchSize / bannerLength);
     glm::vec2 bannerLengths = pitchSize / bannerCount;
     glm::vec2 bannerScale = bannerLengths / bannerLength;

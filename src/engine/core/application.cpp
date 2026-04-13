@@ -27,12 +27,12 @@ Application::Application() : m_isRunning(true)
     m_inputManager->bindAction("left", GLFW_KEY_A);
     m_inputManager->bindAction("right", GLFW_KEY_D);
     m_inputManager->bindAction("space", GLFW_KEY_SPACE);
-    loadShader("default", PROJECT_DIR "assets/shaders/default.vert",
-               PROJECT_DIR "assets/shaders/default.frag");
-    loadShader("light", PROJECT_DIR "assets/shaders/light.vert",
-               PROJECT_DIR "assets/shaders/light.frag");
-    loadShader("lineDebug", PROJECT_DIR "assets/shaders/lineDebug.vert",
-               PROJECT_DIR "assets/shaders/lineDebug.frag");
+    loadShader("default", "assets/shaders/default.vert",
+               "assets/shaders/default.frag");
+    loadShader("light", "assets/shaders/light.vert",
+               "assets/shaders/light.frag");
+    loadShader("lineDebug", "assets/shaders/lineDebug.vert",
+               "assets/shaders/lineDebug.frag");
     Debug::init();
 
     glEnable(GL_DEPTH_TEST);

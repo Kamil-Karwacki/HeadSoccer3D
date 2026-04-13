@@ -7,9 +7,11 @@ project(Projekt_GK
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "Force static libraries" FORCE)
 
 if(MSVC)
     set(COMPILER_WARNINGS /W4)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 else()
     set(COMPILER_WARNINGS -Wall -Wextra -pedantic)
 endif()
@@ -49,9 +51,14 @@ FetchContent_MakeAvailable(tinyobjloader)
 
 add_subdirectory(external/glad)
 
-add_definitions(-DPROJECT_DIR="${CMAKE_CURRENT_SOURCE_DIR}/")
-
 add_executable(${PROJECT_NAME})
+
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    "${CMAKE_SOURCE_DIR}/assets"
+    "$<TARGET_FILE_DIR:${PROJECT_NAME}>/assets"
+    COMMENT "Copying assets..."
+)
 
 target_sources(${PROJECT_NAME} PRIVATE
     src/engine/core/application.cpp

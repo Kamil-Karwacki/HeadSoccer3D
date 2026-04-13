@@ -9,22 +9,17 @@
 #include "stb_image.h"
 #include "tiny_obj_loader.h"
 
-Model::Model(const std::string& path)
+Model::Model(const std::string &path) { loadModel(path); }
+
+Model::Model(Mesh mesh) { m_meshes.push_back(mesh); }
+
+void Model::draw(Shader &shader, unsigned int whiteTextureID)
 {
-    loadModel(path);
+    for (unsigned int i = 0; i < m_meshes.size(); i++)
+        m_meshes[i].draw(shader, whiteTextureID);
 }
 
-Model::Model(Mesh mesh)
-{
-    m_meshes.push_back(mesh);
-}
-
-void Model::draw(Shader& shader, unsigned int whiteTextureID)
-{
-    for (unsigned int i = 0; i < m_meshes.size(); i++) m_meshes[i].draw(shader, whiteTextureID);
-}
-
-void Model::loadModel(const std::string& path)
+void Model::loadModel(const std::string &path)
 {
     std::cout << "Loading model from: " << path << "\n";
     tinyobj::ObjReaderConfig reader_config;
@@ -32,13 +27,14 @@ void Model::loadModel(const std::string& path)
 
     if (!reader.ParseFromFile(path, reader_config))
     {
-        if (!reader.Error().empty()) std::cerr << "TinyObjReader: " << reader.Error();
+        if (!reader.Error().empty())
+            std::cerr << "TinyObjReader: " << reader.Error();
         exit(1);
     }
 
-    auto& attrib = reader.GetAttrib();
-    auto& shapes = reader.GetShapes();
-    auto& materials = reader.GetMaterials();
+    auto &attrib = reader.GetAttrib();
+    auto &shapes = reader.GetShapes();
+    auto &materials = reader.GetMaterials();
 
     size_t numMaterials = materials.empty() ? 1 : materials.size();
 
@@ -59,12 +55,14 @@ void Model::loadModel(const std::string& path)
             size_t fv = size_t(shapes[s].mesh.num_face_vertices[f]);
 
             int mat_id = shapes[s].mesh.material_ids[f];
-            if (mat_id < 0) mat_id = numMaterials;
+            if (mat_id < 0)
+                mat_id = numMaterials;
 
             glm::vec3 face_color = glm::vec3(1.0f);
             if (mat_id >= 0 && mat_id < materials.size())
             {
-                face_color = glm::vec3(materials[mat_id].diffuse[0], materials[mat_id].diffuse[1],
+                face_color = glm::vec3(materials[mat_id].diffuse[0],
+                                       materials[mat_id].diffuse[1],
                                        materials[mat_id].diffuse[2]);
 
                 if (face_color == glm::vec3(0.0f, 0.0f, 0.0f) &&
@@ -79,35 +77,40 @@ void Model::loadModel(const std::string& path)
                 Vertex vertex{};
                 tinyobj::index_t idx = shapes[s].mesh.indices[index_offset + v];
 
-                vertex.position = glm::vec3(attrib.vertices[3 * idx.vertex_index + 0],
-                                            attrib.vertices[3 * idx.vertex_index + 1],
-                                            attrib.vertices[3 * idx.vertex_index + 2]);
+                vertex.position =
+                    glm::vec3(attrib.vertices[3 * idx.vertex_index + 0],
+                              attrib.vertices[3 * idx.vertex_index + 1],
+                              attrib.vertices[3 * idx.vertex_index + 2]);
 
                 if (idx.normal_index >= 0)
-                    vertex.normal = glm::vec3(attrib.normals[3 * idx.normal_index + 0],
-                                              attrib.normals[3 * idx.normal_index + 1],
-                                              attrib.normals[3 * idx.normal_index + 2]);
+                    vertex.normal =
+                        glm::vec3(attrib.normals[3 * idx.normal_index + 0],
+                                  attrib.normals[3 * idx.normal_index + 1],
+                                  attrib.normals[3 * idx.normal_index + 2]);
 
                 if (idx.texcoord_index >= 0)
-                    vertex.texCoords = glm::vec2(attrib.texcoords[2 * idx.texcoord_index + 0],
-                                                 attrib.texcoords[2 * idx.texcoord_index + 1]);
+                    vertex.texCoords =
+                        glm::vec2(attrib.texcoords[2 * idx.texcoord_index + 0],
+                                  attrib.texcoords[2 * idx.texcoord_index + 1]);
 
                 glm::vec3 vertex_color = glm::vec3(1.0f);
                 if (attrib.colors.size() > 0)
-                    vertex_color = glm::vec3(attrib.colors[3 * idx.vertex_index + 0],
-                                             attrib.colors[3 * idx.vertex_index + 1],
-                                             attrib.colors[3 * idx.vertex_index + 2]);
+                    vertex_color =
+                        glm::vec3(attrib.colors[3 * idx.vertex_index + 0],
+                                  attrib.colors[3 * idx.vertex_index + 1],
+                                  attrib.colors[3 * idx.vertex_index + 2]);
 
                 vertex.color = face_color * vertex_color;
 
-                auto& currentMesh = meshDataList[mat_id];
+                auto &currentMesh = meshDataList[mat_id];
                 if (currentMesh.uniqueVertices.count(vertex) == 0)
                 {
                     currentMesh.uniqueVertices[vertex] =
                         static_cast<uint32_t>(currentMesh.vertices.size());
                     currentMesh.vertices.push_back(vertex);
                 }
-                currentMesh.indices.push_back(currentMesh.uniqueVertices[vertex]);
+                currentMesh.indices.push_back(
+                    currentMesh.uniqueVertices[vertex]);
             }
             index_offset += fv;
         }
@@ -115,12 +118,13 @@ void Model::loadModel(const std::string& path)
 
     for (size_t i = 0; i < materials.size(); i++)
     {
-        if (meshDataList[i].vertices.empty()) continue;
+        if (meshDataList[i].vertices.empty())
+            continue;
 
         std::string diffuse_path = materials[i].diffuse_texname;
         if (!diffuse_path.empty())
         {
-            std::string fullPath = PROJECT_DIR "assets/textures/" + diffuse_path;
+            std::string fullPath = "assets/textures/" + diffuse_path;
             std::cout << "Loading diffuse texture from: " << fullPath << "\n";
 
             Texture texture;
@@ -130,18 +134,21 @@ void Model::loadModel(const std::string& path)
 
             stbi_set_flip_vertically_on_load(true);
             int width, height, nrChannels;
-            unsigned char* data = stbi_load(fullPath.c_str(), &width, &height, &nrChannels, 4);
+            unsigned char *data =
+                stbi_load(fullPath.c_str(), &width, &height, &nrChannels, 4);
             if (data)
             {
                 glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
-                             data);
+                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0,
+                             GL_RGBA, GL_UNSIGNED_BYTE, data);
                 glGenerateMipmap(GL_TEXTURE_2D);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                                GL_LINEAR_MIPMAP_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
+                                GL_LINEAR);
 
                 meshDataList[i].textures.push_back(texture);
             }
@@ -151,11 +158,12 @@ void Model::loadModel(const std::string& path)
             }
             stbi_image_free(data);
         }
-        m_meshes.push_back(
-            Mesh(meshDataList[i].vertices, meshDataList[i].indices, meshDataList[i].textures));
+        m_meshes.push_back(Mesh(meshDataList[i].vertices,
+                                meshDataList[i].indices,
+                                meshDataList[i].textures));
     }
 
     if (!meshDataList[numMaterials].vertices.empty())
-        m_meshes.push_back(
-            Mesh(meshDataList[numMaterials].vertices, meshDataList[numMaterials].indices, {}));
+        m_meshes.push_back(Mesh(meshDataList[numMaterials].vertices,
+                                meshDataList[numMaterials].indices, {}));
 }
