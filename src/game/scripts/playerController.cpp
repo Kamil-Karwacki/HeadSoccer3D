@@ -13,17 +13,19 @@
 
 void PlayerController::onStart()
 {
-    Transform* transform = m_entity->GetComponent<Transform>();
+    Transform *transform = m_entity->GetComponent<Transform>();
 
-    if (!transform) std::cerr << "Error: PlayerController requires transform component!\n";
+    if (!transform)
+        std::cerr << "Error: PlayerController requires transform component!\n";
 }
 
 void PlayerController::onUpdate(float deltaTime)
 {
-    Footballer* footballer = m_entity->GetComponent<Footballer>();
-    if (!footballer) return;
+    Footballer *footballer = m_entity->GetComponent<Footballer>();
+    if (!footballer)
+        return;
 
-    Application& app = Application::Get();
+    Application &app = Application::Get();
     InputManager manager = app.GetInput();
 
     if (manager.isActionHeld("forward"))
@@ -53,8 +55,10 @@ void PlayerController::onUpdate(float deltaTime)
     float mouseSensitivity = 0.003f;
     m_yaw += mouseDeltaX * mouseSensitivity;
     m_pitch += mouseDeltaY * mouseSensitivity;
-    if (m_pitch > 0.45f) m_pitch = 0.45f;
-    if (m_pitch < -0.45f) m_pitch = -0.45f;
+    if (m_pitch > 0.45f)
+        m_pitch = 0.45f;
+    if (m_pitch < -0.45f)
+        m_pitch = -0.45f;
 
     footballer->m_rotation = glm::vec2(m_pitch, m_yaw);
 }
