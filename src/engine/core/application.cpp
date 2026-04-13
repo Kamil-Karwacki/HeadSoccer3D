@@ -11,7 +11,7 @@
 #include "window.hpp"
 #include "world/entity.hpp"
 
-Application* Application::s_Instance = nullptr;
+Application *Application::s_Instance = nullptr;
 
 Application::Application() : m_isRunning(true)
 {
@@ -19,7 +19,8 @@ Application::Application() : m_isRunning(true)
 
     m_window = std::make_unique<Window>(1280, 720, "Projekt GK");
 
-    m_inputManager = std::make_unique<InputManager>(m_window->getNativeWindow());
+    m_inputManager =
+        std::make_unique<InputManager>(m_window->getNativeWindow());
 
     m_inputManager->bindAction("forward", GLFW_KEY_W);
     m_inputManager->bindAction("back", GLFW_KEY_S);
@@ -28,6 +29,8 @@ Application::Application() : m_isRunning(true)
     m_inputManager->bindAction("space", GLFW_KEY_SPACE);
     loadShader("default", PROJECT_DIR "assets/shaders/default.vert",
                PROJECT_DIR "assets/shaders/default.frag");
+    loadShader("light", PROJECT_DIR "assets/shaders/light.vert",
+               PROJECT_DIR "assets/shaders/light.frag");
     loadShader("lineDebug", PROJECT_DIR "assets/shaders/lineDebug.vert",
                PROJECT_DIR "assets/shaders/lineDebug.frag");
     Debug::init();
@@ -39,7 +42,8 @@ Application::Application() : m_isRunning(true)
 
     unsigned char whitePixel[] = {255, 255, 255, 255};
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, whitePixel);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                 whitePixel);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -47,16 +51,14 @@ Application::Application() : m_isRunning(true)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 }
 
-Application::~Application()
-{
-    glfwTerminate();
-}
+Application::~Application() { glfwTerminate(); }
 
 void Application::run()
 {
-    glfwSetInputMode(m_window->getNativeWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetInputMode(m_window->getNativeWindow(), GLFW_CURSOR,
+                     GLFW_CURSOR_DISABLED);
 
-    Shader* debugShader = getShader("lineDebug");
+    Shader *debugShader = getShader("lineDebug");
 
     double accumulator = 0.0;
     const double fixedDeltaTime = 1.0 / 60.0;
@@ -67,7 +69,8 @@ void Application::run()
         double deltaTime = currentFrameTime - m_lastFrameTime;
         m_lastFrameTime = currentFrameTime;
 
-        if (deltaTime > 0.25) deltaTime = 0.25;
+        if (deltaTime > 0.25)
+            deltaTime = 0.25;
 
         accumulator += deltaTime;
 
@@ -77,18 +80,18 @@ void Application::run()
         glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        Debug::update(static_cast<float>(deltaTime));
-
-        m_activeScene->update(static_cast<float>(deltaTime));
         while (accumulator >= fixedDeltaTime)
         {
             m_activeScene->fixedUpdate(static_cast<float>(fixedDeltaTime));
             accumulator -= fixedDeltaTime;
         }
+        m_activeScene->update(static_cast<float>(deltaTime));
+        Debug::update(static_cast<float>(deltaTime));
         m_activeScene->draw();
 
         debugShader->use();
-        debugShader->setMat4("view", 1, GL_FALSE, &m_activeScene->getMainViewMatrix()[0][0]);
+        debugShader->setMat4("view", 1, GL_FALSE,
+                             &m_activeScene->getMainViewMatrix()[0][0]);
         debugShader->setMat4("projection", 1, GL_FALSE,
                              &m_activeScene->getMainProjectionMatrix()[0][0]);
         Debug::render(*debugShader);
@@ -102,18 +105,15 @@ void Application::run()
     }
 }
 
-void Application::close()
-{
-    m_isRunning = false;
-}
+void Application::close() { m_isRunning = false; }
 
-void Application::loadShader(const std::string& name, const char* vertexPath,
-                             const char* fragmentPath)
+void Application::loadShader(const std::string &name, const char *vertexPath,
+                             const char *fragmentPath)
 {
     m_shaders[name] = std::make_unique<Shader>(vertexPath, fragmentPath);
 }
 
-Shader* Application::getShader(const std::string& name)
+Shader *Application::getShader(const std::string &name)
 {
     auto it = m_shaders.find(name);
     if (it != m_shaders.end())
@@ -128,5 +128,6 @@ Shader* Application::getShader(const std::string& name)
 void Application::loadScene(std::unique_ptr<Scene> scene)
 {
     m_activeScene = std::move(scene);
-    if (m_activeScene) m_activeScene->init();
+    if (m_activeScene)
+        m_activeScene->init();
 }
