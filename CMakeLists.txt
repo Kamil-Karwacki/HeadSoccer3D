@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.15)
 
-project(Projekt_GK
+project(HeadSoccer3D
         VERSION 1.0
         LANGUAGES C CXX)
 
