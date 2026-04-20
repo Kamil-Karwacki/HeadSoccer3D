@@ -5,12 +5,9 @@
 
 struct Rigidbody : public Component
 {
-    Rigidbody(float mass, float restitution, float friction, float linearDamping,
-              float angularDamping)
-        : m_inverseMass(1.0f / mass),
-          m_restitution(restitution),
-          m_friction(friction),
-          m_linearDamping(linearDamping),
+    Rigidbody(float mass, float restitution, float friction,
+              float linearDamping, float angularDamping)
+        : m_inverseMass(1.0f / mass), m_linearDamping(linearDamping),
           m_angularDamping(angularDamping)
     {
     }
@@ -18,9 +15,6 @@ struct Rigidbody : public Component
     virtual ~Rigidbody() override = default;
 
     float m_inverseMass = 1.0f;
-
-    float m_restitution = 0.3f;
-    float m_friction = 0.9f;
 
     float m_linearDamping = 0.9f;
     float m_angularDamping = 0.9f;
@@ -45,6 +39,7 @@ struct Rigidbody : public Component
         return (m_inverseMass == 0.0f) ? 0.0f : (1.0f / m_inverseMass);
     }
 
-    static glm::mat3 createBoxInverseInertiaTensor(float mass, float dx, float dy, float dz);
+    static glm::mat3 createBoxInverseInertiaTensor(float mass, float dx,
+                                                   float dy, float dz);
     static glm::mat3 createSphereInverseInertiaTensor(float mass, float radius);
 };
