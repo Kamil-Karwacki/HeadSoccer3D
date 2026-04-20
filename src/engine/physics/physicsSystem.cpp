@@ -10,8 +10,8 @@
 
 #include "core/debug.hpp"
 
-bool PhysicsSystem::sphereAndSphere(SphereCollider& one, SphereCollider& two, Rigidbody* rbA,
-                                    Rigidbody* rbB)
+bool PhysicsSystem::sphereAndSphere(SphereCollider &one, SphereCollider &two,
+                                    Rigidbody *rbA, Rigidbody *rbB)
 {
     glm::vec3 positionOne = one.getAxis(3);
     glm::vec3 positionTwo = two.getAxis(3);
@@ -19,7 +19,8 @@ bool PhysicsSystem::sphereAndSphere(SphereCollider& one, SphereCollider& two, Ri
     glm::vec3 midline = positionOne - positionTwo;
     float size = glm::length(midline);
 
-    if (size <= 0.0f || size >= one.m_radius + two.m_radius) return false;
+    if (size <= 0.0f || size >= one.m_radius + two.m_radius)
+        return false;
 
     bool isTrigger = one.m_isTrigger || two.m_isTrigger;
 
@@ -36,7 +37,7 @@ bool PhysicsSystem::sphereAndSphere(SphereCollider& one, SphereCollider& two, Ri
     contact.m_contactPoint = positionOne + midline * 0.5f;
     contact.m_penetration = (one.m_radius + two.m_radius - size);
 
-    setBodyData(contact, rbA, rbB);
+    setBodyData(contact, one, two, rbA, rbB);
 
     m_contacts.push_back(contact);
 
@@ -44,14 +45,17 @@ bool PhysicsSystem::sphereAndSphere(SphereCollider& one, SphereCollider& two, Ri
     return true;
 }
 
-bool PhysicsSystem::sphereAndHalfspace(SphereCollider& sphere, HalfspaceCollider& plane,
-                                       Rigidbody* rbA, Rigidbody* rbB)
+bool PhysicsSystem::sphereAndHalfspace(SphereCollider &sphere,
+                                       HalfspaceCollider &plane, Rigidbody *rbA,
+                                       Rigidbody *rbB)
 {
     glm::vec3 position = sphere.getAxis(3);
 
-    float ballDistance = glm::dot(plane.m_normal, position) - sphere.m_radius - plane.m_offset;
+    float ballDistance =
+        glm::dot(plane.m_normal, position) - sphere.m_radius - plane.m_offset;
 
-    if (ballDistance >= 0) return false;
+    if (ballDistance >= 0)
+        return false;
 
     bool isTrigger = sphere.m_isTrigger || plane.m_isTrigger;
     if (isTrigger)
@@ -63,21 +67,22 @@ bool PhysicsSystem::sphereAndHalfspace(SphereCollider& sphere, HalfspaceCollider
     Contact contact;
     contact.m_contactNormal = plane.m_normal;
     contact.m_penetration = -ballDistance;
-    contact.m_contactPoint = position - plane.m_normal * (ballDistance + sphere.m_radius);
+    contact.m_contactPoint =
+        position - plane.m_normal * (ballDistance + sphere.m_radius);
 
-    setBodyData(contact, rbA, rbB);
+    setBodyData(contact, sphere, plane, rbA, rbB);
 
     m_contacts.push_back(contact);
     notifyColliision(&sphere, &plane);
     return true;
 }
 
-bool PhysicsSystem::boxAndSphere(BoxCollider& box, SphereCollider& sphere, Rigidbody* rbA,
-                                 Rigidbody* rbB)
+bool PhysicsSystem::boxAndSphere(BoxCollider &box, SphereCollider &sphere,
+                                 Rigidbody *rbA, Rigidbody *rbB)
 {
     glm::vec3 sphereCenter = sphere.getAxis(3);
-    glm::vec3 relCenter =
-        glm::vec3(glm::inverse(box.m_worldTransform) * glm::vec4(sphereCenter, 1.0f));
+    glm::vec3 relCenter = glm::vec3(glm::inverse(box.m_worldTransform) *
+                                    glm::vec4(sphereCenter, 1.0f));
 
     if (fabsf(relCenter.x) - sphere.m_radius > box.m_halfSize.x ||
         fabsf(relCenter.y) - sphere.m_radius > box.m_halfSize.y ||
@@ -97,24 +102,32 @@ bool PhysicsSystem::boxAndSphere(BoxCollider& box, SphereCollider& sphere, Rigid
     float distance;
 
     distance = relCenter.x;
-    if (distance > box.m_halfSize.x) distance = box.m_halfSize.x;
-    if (distance < -box.m_halfSize.x) distance = -box.m_halfSize.x;
+    if (distance > box.m_halfSize.x)
+        distance = box.m_halfSize.x;
+    if (distance < -box.m_halfSize.x)
+        distance = -box.m_halfSize.x;
     closestPoint.x = distance;
 
     distance = relCenter.y;
-    if (distance > box.m_halfSize.y) distance = box.m_halfSize.y;
-    if (distance < -box.m_halfSize.y) distance = -box.m_halfSize.y;
+    if (distance > box.m_halfSize.y)
+        distance = box.m_halfSize.y;
+    if (distance < -box.m_halfSize.y)
+        distance = -box.m_halfSize.y;
     closestPoint.y = distance;
 
     distance = relCenter.z;
-    if (distance > box.m_halfSize.z) distance = box.m_halfSize.z;
-    if (distance < -box.m_halfSize.z) distance = -box.m_halfSize.z;
+    if (distance > box.m_halfSize.z)
+        distance = box.m_halfSize.z;
+    if (distance < -box.m_halfSize.z)
+        distance = -box.m_halfSize.z;
     closestPoint.z = distance;
 
     distance = glm::length2(closestPoint - relCenter);
-    if (distance > sphere.m_radius * sphere.m_radius) return false;
+    if (distance > sphere.m_radius * sphere.m_radius)
+        return false;
 
-    glm::vec3 closestPtWorld = glm::vec3(box.m_worldTransform * glm::vec4(closestPoint, 1.0f));
+    glm::vec3 closestPtWorld =
+        glm::vec3(box.m_worldTransform * glm::vec4(closestPoint, 1.0f));
 
     Contact contact;
 
@@ -138,24 +151,27 @@ bool PhysicsSystem::boxAndSphere(BoxCollider& box, SphereCollider& sphere, Rigid
     }
     contact.m_contactPoint = closestPtWorld;
 
-    setBodyData(contact, rbA, rbB);
+    setBodyData(contact, box, sphere, rbA, rbB);
 
     m_contacts.push_back(contact);
     notifyColliision(&box, &sphere);
     return true;
 }
 
-float PhysicsSystem::transformToAxis(const BoxCollider& box, const glm::vec3& axis)
+float PhysicsSystem::transformToAxis(const BoxCollider &box,
+                                     const glm::vec3 &axis)
 {
     return box.m_halfSize.x * fabsf(glm::dot(axis, box.getAxis(0))) +
            box.m_halfSize.y * fabsf(glm::dot(axis, box.getAxis(1))) +
            box.m_halfSize.z * fabsf(glm::dot(axis, box.getAxis(2)));
 }
 
-#define CHECK_OVERLAP(axis, index) \
-    if (!tryAxis(boxA, boxB, (axis), toCenter, (index), pen, best)) return 0;
+#define CHECK_OVERLAP(axis, index)                                             \
+    if (!tryAxis(boxA, boxB, (axis), toCenter, (index), pen, best))            \
+        return 0;
 
-bool PhysicsSystem::boxAndBox(BoxCollider& boxA, BoxCollider& boxB, Rigidbody* rbA, Rigidbody* rbB)
+bool PhysicsSystem::boxAndBox(BoxCollider &boxA, BoxCollider &boxB,
+                              Rigidbody *rbA, Rigidbody *rbB)
 {
     glm::vec3 toCenter = boxB.getAxis(3) - boxA.getAxis(3);
 
@@ -195,7 +211,8 @@ bool PhysicsSystem::boxAndBox(BoxCollider& boxA, BoxCollider& boxB, Rigidbody* r
     else if (best < 6)
     {
         // Box one's vertex is one a face of box two.
-        fillPointFaceBoxBox(boxA, boxB, rbA, rbB, toCenter * -1.0f, best - 3, pen);
+        fillPointFaceBoxBox(boxA, boxB, rbA, rbB, toCenter * -1.0f, best - 3,
+                            pen);
         return true;
     }
     else
@@ -216,7 +233,8 @@ bool PhysicsSystem::boxAndBox(BoxCollider& boxA, BoxCollider& boxB, Rigidbody* r
         glm::vec3 axis = glm::cross(oneAxis, twoAxis);
         axis = glm::normalize(axis);
 
-        if (glm::dot(axis, toCenter) > 0) axis = axis * -1.0f;
+        if (glm::dot(axis, toCenter) > 0)
+            axis = axis * -1.0f;
 
         glm::vec3 ptOnOneEdge = boxA.m_halfSize;
         glm::vec3 ptOnTwoEdge = boxB.m_halfSize;
@@ -236,16 +254,16 @@ bool PhysicsSystem::boxAndBox(BoxCollider& boxA, BoxCollider& boxB, Rigidbody* r
         ptOnOneEdge = boxA.m_worldTransform * glm::vec4(ptOnOneEdge, 1.0f);
         ptOnTwoEdge = boxB.m_worldTransform * glm::vec4(ptOnTwoEdge, 1.0f);
 
-        glm::vec3 vertex =
-            contactPoint(ptOnOneEdge, oneAxis, boxA.m_halfSize[oneAxisIndex], ptOnTwoEdge, twoAxis,
-                         boxB.m_halfSize[twoAxisIndex], bestSingleAxis > 2);
+        glm::vec3 vertex = contactPoint(
+            ptOnOneEdge, oneAxis, boxA.m_halfSize[oneAxisIndex], ptOnTwoEdge,
+            twoAxis, boxB.m_halfSize[twoAxisIndex], bestSingleAxis > 2);
 
         Contact contact;
         contact.m_penetration = pen;
         contact.m_contactNormal = axis;
         contact.m_contactPoint = vertex;
 
-        setBodyData(contact, rbA, rbB);
+        setBodyData(contact, boxA, boxB, rbA, rbB);
 
         m_contacts.push_back(contact);
         notifyColliision(&boxA, &boxB);
@@ -256,8 +274,10 @@ bool PhysicsSystem::boxAndBox(BoxCollider& boxA, BoxCollider& boxB, Rigidbody* r
 }
 #undef CHECK_OVERLAP
 
-glm::vec3 PhysicsSystem::contactPoint(const glm::vec3& pOne, const glm::vec3& dOne, float oneSize,
-                                      const glm::vec3& pTwo, const glm::vec3& dTwo, float twoSize,
+glm::vec3 PhysicsSystem::contactPoint(const glm::vec3 &pOne,
+                                      const glm::vec3 &dOne, float oneSize,
+                                      const glm::vec3 &pTwo,
+                                      const glm::vec3 &dTwo, float twoSize,
                                       bool useOne)
 {
     glm::vec3 toSt, cOne, cTwo;
@@ -273,14 +293,15 @@ glm::vec3 PhysicsSystem::contactPoint(const glm::vec3& pOne, const glm::vec3& dO
     smTwo = glm::length2(dTwo);
     dpOneTwo = glm::dot(dTwo, dOne);
 
-    toSt = pOne - pTwo;  // to start
+    toSt = pOne - pTwo; // to start
     dpStaOne = glm::dot(dOne, toSt);
     dpStaTwo = glm::dot(dTwo, toSt);
 
     denom = smOne * smTwo - dpOneTwo * dpOneTwo;
 
     // Make sure that there is no divison by 0.
-    if (fabsf(denom) < 0.0001f) return useOne ? pOne : pTwo;
+    if (fabsf(denom) < 0.0001f)
+        return useOne ? pOne : pTwo;
 
     mua = (dpOneTwo * dpStaTwo - smTwo * dpStaOne) / denom;
     mub = (smOne * dpStaTwo - dpOneTwo * dpStaOne) / denom;
@@ -298,16 +319,19 @@ glm::vec3 PhysicsSystem::contactPoint(const glm::vec3& pOne, const glm::vec3& dO
     }
 }
 
-bool PhysicsSystem::tryAxis(const BoxCollider& boxA, const BoxCollider& boxB, glm::vec3 axis,
-                            const glm::vec3& toCenter, unsigned int index,
-                            float& smallestPenetration, unsigned int& smallestCase)
+bool PhysicsSystem::tryAxis(const BoxCollider &boxA, const BoxCollider &boxB,
+                            glm::vec3 axis, const glm::vec3 &toCenter,
+                            unsigned int index, float &smallestPenetration,
+                            unsigned int &smallestCase)
 {
-    if (glm::length2(axis) < 0.0001f) return true;
+    if (glm::length2(axis) < 0.0001f)
+        return true;
     axis = glm::normalize(axis);
 
     float penetration = penetrationOnAxis(boxA, boxB, axis, toCenter);
 
-    if (penetration < 0) return false;
+    if (penetration < 0)
+        return false;
     if (penetration < smallestPenetration)
     {
         smallestPenetration = penetration;
@@ -316,8 +340,10 @@ bool PhysicsSystem::tryAxis(const BoxCollider& boxA, const BoxCollider& boxB, gl
     return true;
 }
 
-float PhysicsSystem::penetrationOnAxis(const BoxCollider& boxA, const BoxCollider& boxB,
-                                       const glm::vec3& axis, const glm::vec3& toCenter)
+float PhysicsSystem::penetrationOnAxis(const BoxCollider &boxA,
+                                       const BoxCollider &boxB,
+                                       const glm::vec3 &axis,
+                                       const glm::vec3 &toCenter)
 {
     float oneProject = transformToAxis(boxA, axis);
     float twoProject = transformToAxis(boxB, axis);
@@ -327,8 +353,9 @@ float PhysicsSystem::penetrationOnAxis(const BoxCollider& boxA, const BoxCollide
     return oneProject + twoProject - distance;
 }
 
-void PhysicsSystem::fillPointFaceBoxBox(BoxCollider& boxA, BoxCollider& boxB, Rigidbody* rbA,
-                                        Rigidbody* rbB, const glm::vec3& toCenter,
+void PhysicsSystem::fillPointFaceBoxBox(BoxCollider &boxA, BoxCollider &boxB,
+                                        Rigidbody *rbA, Rigidbody *rbB,
+                                        const glm::vec3 &toCenter,
                                         unsigned int best, float pen)
 {
     bool isTrigger = boxA.m_isTrigger || boxB.m_isTrigger;
@@ -346,33 +373,39 @@ void PhysicsSystem::fillPointFaceBoxBox(BoxCollider& boxA, BoxCollider& boxB, Ri
 
     // Check which vertex is colliding.
     glm::vec3 vertex = boxB.m_halfSize;
-    if (glm::dot(boxB.getAxis(0), normal) < 0) vertex.x = -vertex.x;
-    if (glm::dot(boxB.getAxis(1), normal) < 0) vertex.y = -vertex.y;
-    if (glm::dot(boxB.getAxis(2), normal) < 0) vertex.z = -vertex.z;
+    if (glm::dot(boxB.getAxis(0), normal) < 0)
+        vertex.x = -vertex.x;
+    if (glm::dot(boxB.getAxis(1), normal) < 0)
+        vertex.y = -vertex.y;
+    if (glm::dot(boxB.getAxis(2), normal) < 0)
+        vertex.z = -vertex.z;
 
     Contact contact;
     contact.m_contactNormal = normal;
     contact.m_contactPoint = boxB.m_worldTransform * glm::vec4(vertex, 1.0f);
     contact.m_penetration = pen;
 
-    setBodyData(contact, rbA, rbB);
+    setBodyData(contact, boxA, boxB, rbA, rbB);
 
     m_contacts.push_back(contact);
     notifyColliision(&boxA, &boxB);
 }
 
-bool PhysicsSystem::boxAndHalfspaceSimple(const BoxCollider& box, const HalfspaceCollider& plane)
+bool PhysicsSystem::boxAndHalfspaceSimple(const BoxCollider &box,
+                                          const HalfspaceCollider &plane)
 {
     float projectedRadius = transformToAxis(box, plane.m_normal);
-    float boxDistance = glm::dot(plane.m_normal, box.getAxis(3)) - projectedRadius;
+    float boxDistance =
+        glm::dot(plane.m_normal, box.getAxis(3)) - projectedRadius;
 
     return boxDistance <= plane.m_offset;
 }
 
-bool PhysicsSystem::boxAndHalfspace(BoxCollider& box, HalfspaceCollider& plane, Rigidbody* rbA,
-                                    Rigidbody* rbB)
+bool PhysicsSystem::boxAndHalfspace(BoxCollider &box, HalfspaceCollider &plane,
+                                    Rigidbody *rbA, Rigidbody *rbB)
 {
-    if (!boxAndHalfspaceSimple(box, plane)) return false;
+    if (!boxAndHalfspaceSimple(box, plane))
+        return false;
 
     bool isTrigger = box.m_isTrigger || plane.m_isTrigger;
     if (isTrigger)
@@ -380,8 +413,9 @@ bool PhysicsSystem::boxAndHalfspace(BoxCollider& box, HalfspaceCollider& plane, 
         notifyTrigger(&box, &plane);
         return true;
     }
-    static float mults[8][3] = {{1, 1, 1},  {-1, 1, 1},  {1, -1, 1},  {-1, -1, 1},
-                                {1, 1, -1}, {-1, 1, -1}, {1, -1, -1}, {-1, -1, -1}};
+    static float mults[8][3] = {{1, 1, 1},   {-1, 1, 1},  {1, -1, 1},
+                                {-1, -1, 1}, {1, 1, -1},  {-1, 1, -1},
+                                {1, -1, -1}, {-1, -1, -1}};
 
     for (size_t i = 0; i < 8; i++)
     {
@@ -397,7 +431,7 @@ bool PhysicsSystem::boxAndHalfspace(BoxCollider& box, HalfspaceCollider& plane, 
             contact.m_contactPoint = vertexPos;
             contact.m_contactNormal = plane.m_normal;
             contact.m_penetration = plane.m_offset - vertexDistance;
-            setBodyData(contact, rbA, rbB);
+            setBodyData(contact, box, plane, rbA, rbB);
 
             m_contacts.push_back(contact);
         }
@@ -406,7 +440,9 @@ bool PhysicsSystem::boxAndHalfspace(BoxCollider& box, HalfspaceCollider& plane, 
     return true;
 }
 
-void PhysicsSystem::setBodyData(Contact& contact, Rigidbody* rbA, Rigidbody* rbB)
+void PhysicsSystem::setBodyData(Contact &contact, const Collider &colA,
+                                const Collider &colB, Rigidbody *rbA,
+                                Rigidbody *rbB)
 {
     // Make sure that first body is never nullptr
     if (rbA)
@@ -421,111 +457,118 @@ void PhysicsSystem::setBodyData(Contact& contact, Rigidbody* rbA, Rigidbody* rbB
         contact.m_contactNormal *= -1;
     }
 
-    float restitutionA = contact.m_body[0]->m_restitution;
-    float frictionA = contact.m_body[0]->m_friction;
+    float restitution = (colA.m_restitution + colB.m_restitution) * 0.5f;
+    float friction = (colA.m_friction + colB.m_friction) * 0.5f;
 
-    float restitutionB = contact.m_body[1] ? contact.m_body[1]->m_restitution : 0.0f;
-    float frictionB = contact.m_body[1] ? contact.m_body[1]->m_friction : 0.0f;
-
-    contact.m_restitution = (restitutionA + restitutionB) * 0.5f;
-    contact.m_friction = (frictionA + frictionB) * 0.5f;
+    contact.m_restitution = restitution;
+    contact.m_friction = friction;
 }
 
-void PhysicsSystem::generateContacts(std::vector<std::unique_ptr<Entity>>& entities)
+void PhysicsSystem::generateContacts(
+    std::vector<std::unique_ptr<Entity>> &entities)
 {
     m_contacts.clear();
-    if (entities.size() < 2) return;
+    if (entities.size() < 2)
+        return;
 
-    for (auto& entity : entities)
+    for (auto &entity : entities)
     {
-        Transform* transform = entity->GetComponent<Transform>();
-        if (!transform) continue;
+        Transform *transform = entity->GetComponent<Transform>();
+        if (!transform)
+            continue;
 
-        std::vector<TransformableCollider*> colliders =
+        std::vector<TransformableCollider *> colliders =
             entity->GetComponents<TransformableCollider>();
-        if (colliders.empty()) continue;
+        if (colliders.empty())
+            continue;
 
-        for (auto& collider : colliders)
+        for (auto &collider : colliders)
         {
-            collider->m_worldTransform = transform->getModelMatrix() * collider->m_offset;
+            collider->m_worldTransform =
+                transform->getModelMatrix() * collider->m_offset;
         }
     }
 
     for (size_t i = 0; i < entities.size(); i++)
     {
-        Entity* entityA = entities[i].get();
-        Rigidbody* rbA = entityA->GetComponent<Rigidbody>();
+        Entity *entityA = entities[i].get();
+        Rigidbody *rbA = entityA->GetComponent<Rigidbody>();
 
-        std::vector<Collider*> collidersA = entityA->GetComponents<Collider>();
-        if (collidersA.empty()) continue;
+        std::vector<Collider *> collidersA = entityA->GetComponents<Collider>();
+        if (collidersA.empty())
+            continue;
 
         for (size_t j = i + 1; j < entities.size(); j++)
         {
-            Entity* entityB = entities[j].get();
-            Rigidbody* rbB = entityB->GetComponent<Rigidbody>();
+            Entity *entityB = entities[j].get();
+            Rigidbody *rbB = entityB->GetComponent<Rigidbody>();
 
-            if (!rbA && !rbB) continue;
+            if (!rbA && !rbB)
+                continue;
 
-            std::vector<Collider*> collidersB = entityB->GetComponents<Collider>();
-            if (collidersB.empty()) continue;
+            std::vector<Collider *> collidersB =
+                entityB->GetComponents<Collider>();
+            if (collidersB.empty())
+                continue;
 
-            for (Collider* colA : collidersA)
+            for (Collider *colA : collidersA)
             {
-                for (Collider* colB : collidersB)
+                for (Collider *colB : collidersB)
                 {
                     if (colA->m_type == ColliderType::Sphere &&
                         colB->m_type == ColliderType::Sphere)
                     {
-                        auto* sA = static_cast<SphereCollider*>(colA);
-                        auto* sB = static_cast<SphereCollider*>(colB);
+                        auto *sA = static_cast<SphereCollider *>(colA);
+                        auto *sB = static_cast<SphereCollider *>(colB);
                         sphereAndSphere(*sA, *sB, rbA, rbB);
                     }
                     else if (colA->m_type == ColliderType::Box &&
                              colB->m_type == ColliderType::Sphere)
                     {
-                        auto* bA = static_cast<BoxCollider*>(colA);
-                        auto* sB = static_cast<SphereCollider*>(colB);
+                        auto *bA = static_cast<BoxCollider *>(colA);
+                        auto *sB = static_cast<SphereCollider *>(colB);
                         boxAndSphere(*bA, *sB, rbA, rbB);
                     }
                     else if (colA->m_type == ColliderType::Sphere &&
                              colB->m_type == ColliderType::Box)
                     {
-                        auto* sA = static_cast<SphereCollider*>(colA);
-                        auto* bB = static_cast<BoxCollider*>(colB);
+                        auto *sA = static_cast<SphereCollider *>(colA);
+                        auto *bB = static_cast<BoxCollider *>(colB);
                         boxAndSphere(*bB, *sA, rbB, rbA);
                     }
-                    else if (colA->m_type == ColliderType::Box && colB->m_type == ColliderType::Box)
+                    else if (colA->m_type == ColliderType::Box &&
+                             colB->m_type == ColliderType::Box)
                     {
-                        auto* bA = static_cast<BoxCollider*>(colA);
-                        auto* bB = static_cast<BoxCollider*>(colB);
+                        auto *bA = static_cast<BoxCollider *>(colA);
+                        auto *bB = static_cast<BoxCollider *>(colB);
                         boxAndBox(*bA, *bB, rbA, rbB);
                     }
                     else if (colA->m_type == ColliderType::Sphere &&
                              colB->m_type == ColliderType::Halfspace)
                     {
-                        auto* sA = static_cast<SphereCollider*>(colA);
-                        auto* pB = static_cast<HalfspaceCollider*>(colB);
+                        auto *sA = static_cast<SphereCollider *>(colA);
+                        auto *pB = static_cast<HalfspaceCollider *>(colB);
                         sphereAndHalfspace(*sA, *pB, rbA, rbB);
                     }
                     else if (colA->m_type == ColliderType::Halfspace &&
                              colB->m_type == ColliderType::Sphere)
                     {
-                        auto* pA = static_cast<HalfspaceCollider*>(colA);
-                        auto* sB = static_cast<SphereCollider*>(colB);
+                        auto *pA = static_cast<HalfspaceCollider *>(colA);
+                        auto *sB = static_cast<SphereCollider *>(colB);
                         sphereAndHalfspace(*sB, *pA, rbB, rbA);
                     }
                     else if (colA->m_type == ColliderType::Box &&
                              colB->m_type == ColliderType::Halfspace)
                     {
-                        auto* bA = static_cast<BoxCollider*>(colA);
-                        auto* pB = static_cast<HalfspaceCollider*>(colB);
+                        auto *bA = static_cast<BoxCollider *>(colA);
+                        auto *pB = static_cast<HalfspaceCollider *>(colB);
                         boxAndHalfspace(*bA, *pB, rbA, rbB);
                     }
                     else if (colA->m_type == ColliderType::Halfspace &&
                              colB->m_type == ColliderType::Box)
                     {
-                        auto* pA = static_cast<HalfspaceCollider*>(colA);
-                        auto* bB = static_cast<BoxCollider*>(colB);
+                        auto *pA = static_cast<HalfspaceCollider *>(colA);
+                        auto *bB = static_cast<BoxCollider *>(colB);
                         boxAndHalfspace(*bB, *pA, rbB, rbA);
                     }
                 }
@@ -534,17 +577,18 @@ void PhysicsSystem::generateContacts(std::vector<std::unique_ptr<Entity>>& entit
 
         /*for (Contact& c : m_contacts)
         {
-            Debug::addLine(c.m_contactPoint, c.m_contactPoint + c.m_contactNormal * 5.0f,
-                           glm::vec3(1.0f, 1.0f, 1.0f), 0.5f);
+            Debug::addLine(c.m_contactPoint, c.m_contactPoint +
+        c.m_contactNormal * 5.0f, glm::vec3(1.0f, 1.0f, 1.0f), 0.5f);
         }*/
     }
 }
 
 void PhysicsSystem::resolveContacts(float deltaTime)
 {
-    if (m_contacts.empty()) return;
+    if (m_contacts.empty())
+        return;
 
-    for (Contact& c : m_contacts)
+    for (Contact &c : m_contacts)
     {
         c.calculateInternals(deltaTime);
     }
@@ -577,29 +621,34 @@ void PhysicsSystem::adjustPositions()
                 index = i;
             }
         }
-        if (index == numContacts) break;
+        if (index == numContacts)
+            break;
 
         m_contacts[index].applyPositionChange(linearChange, angularChange, max);
 
-        // If body was moved, then other contact points which involved that body are
-        // outdated. Therefore we need to update contacts that belong to affected
-        // body.
+        // If body was moved, then other contact points which involved that body
+        // are outdated. Therefore we need to update contacts that belong to
+        // affected body.
         for (i = 0; i < numContacts; i++)
         {
             for (size_t b = 0; b < 2; b++)
             {
-                if (!m_contacts[i].m_body[b]) continue;
+                if (!m_contacts[i].m_body[b])
+                    continue;
 
                 for (size_t d = 0; d < 2; d++)
                 {
                     if (m_contacts[i].m_body[b] == m_contacts[index].m_body[d])
                     {
-                        deltaPosition = linearChange[d] +
-                                        glm::cross(angularChange[d],
-                                                   m_contacts[i].m_relativeContactPosition[b]);
+                        deltaPosition =
+                            linearChange[d] +
+                            glm::cross(
+                                angularChange[d],
+                                m_contacts[i].m_relativeContactPosition[b]);
 
                         m_contacts[i].m_penetration +=
-                            glm::dot(deltaPosition, m_contacts[i].m_contactNormal) *
+                            glm::dot(deltaPosition,
+                                     m_contacts[i].m_contactNormal) *
                             (b ? 1.0f : -1.0f);
                     }
                 }
@@ -628,29 +677,33 @@ void PhysicsSystem::adjustVelocities(float deltaTime)
                 index = i;
             }
         }
-        if (index == numContacts) break;
+        if (index == numContacts)
+            break;
 
         m_contacts[index].applyVelocityChange(velocityChange, rotationChange);
 
-        // Once we apply velocity change, if there are other bodies colliding with
-        // affected body we need to update their contact velocities.
+        // Once we apply velocity change, if there are other bodies colliding
+        // with affected body we need to update their contact velocities.
         for (size_t i = 0; i < numContacts; i++)
         {
             for (size_t b = 0; b < 2; b++)
             {
-                if (!m_contacts[i].m_body[b]) continue;
+                if (!m_contacts[i].m_body[b])
+                    continue;
 
                 for (size_t d = 0; d < 2; d++)
                 {
                     if (m_contacts[i].m_body[b] == m_contacts[index].m_body[d])
                     {
-                        deltaVel = velocityChange[d] +
-                                   glm::cross(rotationChange[d],
-                                              m_contacts[i].m_relativeContactPosition[b]);
+                        deltaVel =
+                            velocityChange[d] +
+                            glm::cross(
+                                rotationChange[d],
+                                m_contacts[i].m_relativeContactPosition[b]);
 
                         m_contacts[i].m_contactVelocity +=
-                            glm::transpose(m_contacts[i].m_contactToWorld) * deltaVel *
-                            (b ? -1.0f : 1.0f);
+                            glm::transpose(m_contacts[i].m_contactToWorld) *
+                            deltaVel * (b ? -1.0f : 1.0f);
                         m_contacts[i].calculateDesiredDeltaVelocity(deltaTime);
                     }
                 }
@@ -660,21 +713,25 @@ void PhysicsSystem::adjustVelocities(float deltaTime)
     }
 }
 
-void PhysicsSystem::update(const std::vector<std::unique_ptr<Entity>>& entities, float deltaTime)
+void PhysicsSystem::update(const std::vector<std::unique_ptr<Entity>> &entities,
+                           float deltaTime)
 {
-    for (const std::unique_ptr<Entity>& entityPtr : entities)
+    for (const std::unique_ptr<Entity> &entityPtr : entities)
     {
-        Entity* entity = entityPtr.get();
-        Rigidbody* rb = entity->GetComponent<Rigidbody>();
-        Transform* transform = entity->GetComponent<Transform>();
+        Entity *entity = entityPtr.get();
+        Rigidbody *rb = entity->GetComponent<Rigidbody>();
+        Transform *transform = entity->GetComponent<Transform>();
 
-        if (!rb || !transform) continue;
-        if (rb->m_inverseMass == 0.0f) continue;
+        if (!rb || !transform)
+            continue;
+        if (rb->m_inverseMass == 0.0f)
+            continue;
 
         glm::vec3 acceleration = rb->m_forceAcc * rb->m_inverseMass;
         rb->m_velocity += acceleration * deltaTime;
 
-        glm::vec3 angularAcceleration = rb->m_invInertiaTensorWorld * rb->m_torqueAcc;
+        glm::vec3 angularAcceleration =
+            rb->m_invInertiaTensorWorld * rb->m_torqueAcc;
         rb->m_angularVelocity += angularAcceleration * deltaTime;
 
         rb->m_velocity *= pow(rb->m_linearDamping, deltaTime);
@@ -687,25 +744,27 @@ void PhysicsSystem::update(const std::vector<std::unique_ptr<Entity>>& entities,
         // Update inverse inertia tensor world due to objects rotation.
         glm::mat4 modelMatrix = transform->getModelMatrix();
         glm::mat3 rotationMatrix = glm::mat3(modelMatrix);
-        rb->m_invInertiaTensorWorld =
-            rotationMatrix * rb->m_invInertiaTensor * glm::transpose(rotationMatrix);
+        rb->m_invInertiaTensorWorld = rotationMatrix * rb->m_invInertiaTensor *
+                                      glm::transpose(rotationMatrix);
 
         rb->m_forceAcc = glm::vec3(0.0f);
         rb->m_torqueAcc = glm::vec3(0.0f);
     }
 }
 
-void PhysicsSystem::notifyTrigger(Collider* colliderA, Collider* colliderB)
+void PhysicsSystem::notifyTrigger(Collider *colliderA, Collider *colliderB)
 {
-    if (!colliderA || !colliderB) return;
+    if (!colliderA || !colliderB)
+        return;
 
     colliderA->m_entity->notifyTriggerEnter(colliderB);
     colliderB->m_entity->notifyTriggerEnter(colliderA);
 }
 
-void PhysicsSystem::notifyColliision(Collider* colliderA, Collider* colliderB)
+void PhysicsSystem::notifyColliision(Collider *colliderA, Collider *colliderB)
 {
-    if (!colliderA || !colliderB) return;
+    if (!colliderA || !colliderB)
+        return;
 
     colliderA->m_entity->notifyCollisionEnter(colliderB);
     colliderB->m_entity->notifyCollisionEnter(colliderA);

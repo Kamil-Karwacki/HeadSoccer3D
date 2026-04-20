@@ -12,20 +12,26 @@ enum class ColliderType
 
 struct Collider : public Component
 {
-   public:
-    Collider(ColliderType type, bool isTrigger) : m_type(type), m_isTrigger(isTrigger)
+  public:
+    Collider(ColliderType type, bool isTrigger, float restitution = 0.2f,
+             float friction = 0.9f)
+        : m_type(type), m_isTrigger(isTrigger), m_restitution(restitution),
+          m_friction(friction)
     {
     }
     virtual ~Collider() override = default;
 
+    float m_restitution = 0.3f;
+    float m_friction = 0.9f;
     ColliderType m_type;
     bool m_isTrigger = false;
 };
 
 struct TransformableCollider : public Collider
 {
-   public:
-    TransformableCollider(ColliderType type, const glm::mat4& offset, bool isTrigger)
+  public:
+    TransformableCollider(ColliderType type, const glm::mat4 &offset,
+                          bool isTrigger)
         : Collider(type, isTrigger), m_offset(offset)
     {
     }
@@ -37,9 +43,10 @@ struct TransformableCollider : public Collider
 
 struct HalfspaceCollider : public Collider
 {
-   public:
+  public:
     HalfspaceCollider(glm::vec3 normal, float offset, bool isTrigger = false)
-        : Collider(ColliderType::Halfspace, isTrigger), m_normal(normal), m_offset(offset)
+        : Collider(ColliderType::Halfspace, isTrigger), m_normal(normal),
+          m_offset(offset)
     {
     }
 
@@ -49,10 +56,12 @@ struct HalfspaceCollider : public Collider
 
 struct SphereCollider : public TransformableCollider
 {
-   public:
-    SphereCollider(float radius = 1.0f, const glm::mat4& offset = glm::mat4(1.0f),
+  public:
+    SphereCollider(float radius = 1.0f,
+                   const glm::mat4 &offset = glm::mat4(1.0f),
                    bool isTrigger = false)
-        : TransformableCollider(ColliderType::Sphere, offset, isTrigger), m_radius(radius)
+        : TransformableCollider(ColliderType::Sphere, offset, isTrigger),
+          m_radius(radius)
     {
     }
 
@@ -61,10 +70,12 @@ struct SphereCollider : public TransformableCollider
 
 struct BoxCollider : public TransformableCollider
 {
-   public:
-    BoxCollider(glm::vec3 halfSize = glm::vec3(1.0f), const glm::mat4& offset = glm::mat4(1.0f),
+  public:
+    BoxCollider(glm::vec3 halfSize = glm::vec3(1.0f),
+                const glm::mat4 &offset = glm::mat4(1.0f),
                 bool isTrigger = false)
-        : TransformableCollider(ColliderType::Box, offset, isTrigger), m_halfSize(halfSize)
+        : TransformableCollider(ColliderType::Box, offset, isTrigger),
+          m_halfSize(halfSize)
     {
     }
 
