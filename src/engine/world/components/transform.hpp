@@ -9,7 +9,9 @@ class Transform : public Component
   public:
     Transform() = default;
     Transform(glm::vec3 position) : m_position(position) {}
-    Transform(glm::vec3 position, glm::vec3 rotation) : m_position(position)
+    Transform(glm::vec3 position, glm::vec3 rotation,
+              glm::vec3 scale = glm::vec3(0))
+        : m_position(position), m_scale(scale)
     {
         setRotation(rotation);
     }

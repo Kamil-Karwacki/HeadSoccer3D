@@ -77,7 +77,7 @@ void Application::run()
         m_inputManager->update();
         glfwPollEvents();
 
-        glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
+        glClearColor(0.5f, 0.8f, 0.95f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         while (accumulator >= fixedDeltaTime)
