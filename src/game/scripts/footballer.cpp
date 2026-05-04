@@ -11,7 +11,6 @@
 void Footballer::onUpdate(float deltaTime)
 {
     kickLoop();
-    m_ball = nullptr;
     move(deltaTime);
 }
 
@@ -28,6 +27,7 @@ void Footballer::kickLoop()
 {
     if (!m_shouldKick)
         return;
+    m_shouldKick = false;
     if (!m_ball)
         return;
     Rigidbody *ballRb = m_ball->m_entity->GetComponent<Rigidbody>();
@@ -49,7 +49,6 @@ void Footballer::kickLoop()
     glm::vec3 kickDir = glm::normalize((ballTrans->getPosition() + front) -
                                        transform->getPosition());
     ballRb->m_forceAcc += m_kickStrength * kickDir;
-    m_shouldKick = false;
 }
 
 void Footballer::move(float deltaTime)
