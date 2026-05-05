@@ -30,13 +30,15 @@ void BaseScene::init()
     Shader *defaultShader = app.getShader("default");
 
     Entity &player = createEntity();
-    player.AddComponent<Transform>(glm::vec3(0, 10, -19));
+    player.AddComponent<Transform>(glm::vec3(0, 10, 0), glm::vec3(0),
+                                   glm::vec3(1.5f));
     player.AddComponent<PlayerController>();
     player.AddComponent<MeshRenderer>(
         std::make_shared<Model>("assets/models/sphere.obj"), defaultShader);
     player.AddComponent<PlayerController>();
     player.AddComponent<Rigidbody>(1.0f, 0.1f, 0.5f, 0.9f, 0.9f);
-    player.AddComponent<SphereCollider>(2.0f);
+    player.AddComponent<SphereCollider>(1.5f);
+    player.AddComponent<BoxCollider>(glm::vec3(0.5f, 0.5f, 0.5f));
     player.GetComponent<Rigidbody>()->m_invInertiaTensor =
         Rigidbody::createSphereInverseInertiaTensor(1.0f, 2.0f);
     player.AddComponent<Footballer>();
@@ -54,10 +56,11 @@ void BaseScene::init()
     sphere.AddComponent<Transform>();
     sphere.AddComponent<MeshRenderer>(
         std::make_shared<Model>("assets/models/ball.obj"), defaultShader);
-    sphere.GetComponent<Transform>()->setScale(glm::vec3(2.0f));
-    sphere.GetComponent<Transform>()->setPosition(glm::vec3(0.0f, 5.0f, 0.0f));
-    sphere.AddComponent<SphereCollider>(2.0f);
-    sphere.AddComponent<Rigidbody>(1.0f, 0.3f, 30.0f, 0.95f, 0.8f);
+    sphere.GetComponent<Transform>()->setScale(glm::vec3(2.5f));
+    sphere.GetComponent<Transform>()->setPosition(glm::vec3(0.0f, 15.0f, 0.0f));
+    SphereCollider &ballCol = sphere.AddComponent<SphereCollider>(2.0f);
+    ballCol.m_friction = 1.0f;
+    sphere.AddComponent<Rigidbody>(1.0f, 0.3f, 30.0f, 0.98f, 0.98f);
     Rigidbody *sphereRb = sphere.GetComponent<Rigidbody>();
     sphereRb->m_invInertiaTensor =
         Rigidbody::createSphereInverseInertiaTensor(10.0f, 2.0f);
@@ -97,6 +100,7 @@ void BaseScene::generateTerrain()
     Shader *defaultShader = app.getShader("default");
 
     glm::vec2 pitchSize = glm::vec2(115, 74);
+    pitchSize *= 1.4f;
     float wallHeight = 4.0f;
     float bannerLength = 32.0f;
 
@@ -104,7 +108,7 @@ void BaseScene::generateTerrain()
     glm::vec2 groundAdd = glm::vec2(tribuneOffset.y * 2);
     generatePitch(pitchSize, groundAdd, wallHeight, bannerLength,
                   defaultShader);
-    glm::vec3 gateSize = glm::vec3(22.0f, 7.0f, 7.0f);
+    glm::vec3 gateSize = glm::vec3(30.0f, 11.0f, 7.0f);
     float gateThickness = 0.7f;
 
     generateGates(pitchSize, gateSize, gateThickness, defaultShader);

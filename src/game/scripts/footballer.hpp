@@ -23,5 +23,5 @@ class Footballer : public Behaviour
     bool m_shouldKick = false;
     Ball *m_ball = nullptr;
     float m_kickStrength = 400.0f;
-    float m_speed = 500.0f;
+    float m_speed = 350.0f;
 };
