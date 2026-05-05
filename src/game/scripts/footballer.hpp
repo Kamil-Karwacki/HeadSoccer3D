@@ -17,6 +17,7 @@ class Footballer : public Behaviour
 
     glm::vec2 m_input = glm::vec2(0.0f);
     glm::vec2 m_rotation = glm::vec2(0.0f);
+    bool m_jump = false;
 
   private:
     void kickLoop();
@@ -24,4 +25,5 @@ class Footballer : public Behaviour
     Ball *m_ball = nullptr;
     float m_kickStrength = 400.0f;
     float m_speed = 350.0f;
+    float m_jumpHeight = 100.0f;
 };

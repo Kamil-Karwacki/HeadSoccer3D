@@ -71,6 +71,11 @@ void Footballer::move(float deltaTime)
     rigidbody->m_forceAcc += -glm::cross(front, up) * deltaTime * m_speed *
                              rigidbody->getMass() * m_input.x;
 
+    if (m_jump)
+        rigidbody->m_forceAcc +=
+            glm::vec3(0, m_jumpHeight * rigidbody->getMass(), 0);
+
     m_input = glm::vec2(0.0f, 0.0f);
     m_rotation = glm::vec2(0.0f);
+    m_jump = false;
 }

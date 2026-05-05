@@ -276,7 +276,7 @@ void BaseScene::generateGates(glm::vec2 pitchSize, glm::vec3 gateSize,
                     glm::vec3(0.8f, 0.8f, 0.8f))),
                 defaultShader);
             bar.AddComponent<BoxCollider>(
-                glm::vec3(gateThickness, gateSize.y, gateThickness));
+                glm::vec3(gateThickness, gateSize.y / 2.0f, gateThickness));
         }
     }
 
@@ -294,6 +294,6 @@ void BaseScene::generateGates(glm::vec2 pitchSize, glm::vec3 gateSize,
                 glm::vec3(0.8f, 0.8f, 0.8f))),
             defaultShader);
         topBar.AddComponent<BoxCollider>(
-            glm::vec3(gateThickness, gateSize.x, gateThickness));
+            glm::vec3(gateThickness, gateSize.x / 2.0f, gateThickness));
     }
 }

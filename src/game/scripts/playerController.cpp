@@ -44,9 +44,13 @@ void PlayerController::onUpdate(float deltaTime)
     {
         footballer->m_input.x = 1;
     }
-    if (manager.isActionPressed("space"))
+    if (manager.isActionPressed("shoot"))
     {
         footballer->kickBall();
+    }
+    if (manager.isActionPressed("jump"))
+    {
+        footballer->m_jump = true;
     }
 
     float mouseDeltaX = static_cast<float>(manager.getMouseDeltaX());
