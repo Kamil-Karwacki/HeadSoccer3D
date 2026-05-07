@@ -81,6 +81,7 @@ target_sources(${PROJECT_NAME} PRIVATE
     src/game/scripts/cameraController.cpp
     src/game/scripts/footballer.cpp
     src/game/scripts/ball.cpp
+    src/game/scripts/playerGrounded.cpp
     src/third_party/stb_implementation.cpp
     src/third_party/tinyobjloader_implementation.cpp
     src/main.cpp

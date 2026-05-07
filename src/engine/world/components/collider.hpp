@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 #include <glm/glm.hpp>
 
 #include "world/component.hpp"
@@ -8,6 +9,14 @@ enum class ColliderType
     Sphere,
     Box,
     Halfspace
+};
+
+enum CollisionLayer
+{
+    CAT_GROUND = 1 << 0,
+    CAT_PLAYER = 1 << 1,
+    CAT_ENEMY = 1 << 2,
+    CAT_BALL = 1 << 3
 };
 
 struct Collider : public Component
@@ -25,6 +34,8 @@ struct Collider : public Component
     float m_friction = 0.9f;
     ColliderType m_type;
     bool m_isTrigger = false;
+    uint64_t m_layer = UINT64_MAX;
+    uint64_t m_mask = UINT64_MAX;
 };
 
 struct TransformableCollider : public Collider

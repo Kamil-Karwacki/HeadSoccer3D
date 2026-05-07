@@ -45,10 +45,14 @@ void Footballer::kickLoop()
     InputManager manager = app.GetInput();
 
     glm::vec3 front = transform->getFront();
-    front.y *= -3.5f;
+    front.y *= -1.5f;
     glm::vec3 kickDir = glm::normalize((ballTrans->getPosition() + front) -
                                        transform->getPosition());
-    ballRb->m_forceAcc += m_kickStrength * kickDir;
+    float distToBall =
+        glm::distance(transform->getPosition(), ballTrans->getPosition());
+    float kickModifier = 8.0f / pow(distToBall, 1.5f);
+    ballRb->m_forceAcc += m_kickStrength * kickDir * kickModifier;
+    m_ball = nullptr;
 }
 
 void Footballer::move(float deltaTime)
@@ -71,11 +75,15 @@ void Footballer::move(float deltaTime)
     rigidbody->m_forceAcc += -glm::cross(front, up) * deltaTime * m_speed *
                              rigidbody->getMass() * m_input.x;
 
-    if (m_jump)
+    if (m_groundTimer > 0.0f && m_jump)
+    {
         rigidbody->m_forceAcc +=
             glm::vec3(0, m_jumpHeight * rigidbody->getMass(), 0);
+        m_groundTimer = 0.0f;
+    }
 
     m_input = glm::vec2(0.0f, 0.0f);
     m_rotation = glm::vec2(0.0f);
     m_jump = false;
+    m_groundTimer -= deltaTime;
 }

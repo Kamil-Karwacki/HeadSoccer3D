@@ -13,6 +13,7 @@
 #include "physics/physicsSystem.hpp"
 #include "playerController.hpp"
 #include "scripts/ball.hpp"
+#include "scripts/playerGrounded.hpp"
 #include "world/components/collider.hpp"
 #include "world/components/light.hpp"
 #include "world/components/meshRenderer.hpp"
@@ -35,17 +36,30 @@ void BaseScene::init()
     player.AddComponent<PlayerController>();
     player.AddComponent<MeshRenderer>(
         std::make_shared<Model>("assets/models/sphere.obj"), defaultShader);
-    player.AddComponent<PlayerController>();
-    player.AddComponent<Rigidbody>(1.0f, 0.1f, 0.5f, 0.9f, 0.9f);
-    player.AddComponent<SphereCollider>(1.5f);
-    player.AddComponent<BoxCollider>(glm::vec3(0.5f, 0.5f, 0.5f));
+    player.AddComponent<Rigidbody>(10.0f, 0.1f, 0.5f, 0.9f, 0.9f);
+    SphereCollider &playerCol = player.AddComponent<SphereCollider>(1.5f);
+    playerCol.m_layer = CAT_PLAYER;
+    playerCol.m_mask = CAT_BALL | CAT_ENEMY | CAT_GROUND;
     player.GetComponent<Rigidbody>()->m_invInertiaTensor =
         Rigidbody::createSphereInverseInertiaTensor(1.0f, 2.0f);
     player.AddComponent<Footballer>();
 
     glm::mat4 offset = glm::mat4(1.0f);
     offset = glm::translate(offset, glm::vec3(0, 0, 3));
-    player.AddComponent<SphereCollider>(2.0f, offset, true);
+    SphereCollider &playerBallCol =
+        player.AddComponent<SphereCollider>(2.0f, offset, true);
+    playerBallCol.m_layer = CAT_PLAYER;
+    playerBallCol.m_mask = CAT_BALL;
+
+    Entity &playerGrounded = createEntity();
+    playerGrounded.AddComponent<Transform>();
+    SphereCollider &groundCol = playerGrounded.AddComponent<SphereCollider>(
+        0.5f, glm::mat4(1.0f), true);
+    groundCol.m_layer = CAT_PLAYER;
+    groundCol.m_mask = CAT_GROUND | CAT_BALL | CAT_ENEMY;
+    playerGrounded.AddComponent<PlayerGrounded>(&player, glm::vec3(0, -1, 0));
+    playerGrounded.AddComponent<MeshRenderer>(
+        std::make_shared<Model>("assets/models/ball.obj"), defaultShader);
 
     Entity &cameraPlayer = createEntity();
     cameraPlayer.AddComponent<Transform>();
@@ -60,7 +74,10 @@ void BaseScene::init()
     sphere.GetComponent<Transform>()->setPosition(glm::vec3(0.0f, 15.0f, 0.0f));
     SphereCollider &ballCol = sphere.AddComponent<SphereCollider>(2.0f);
     ballCol.m_friction = 1.0f;
-    sphere.AddComponent<Rigidbody>(1.0f, 0.3f, 30.0f, 0.98f, 0.98f);
+    ballCol.m_layer = CAT_BALL;
+    ballCol.m_mask = CAT_BALL | CAT_PLAYER | CAT_ENEMY | CAT_GROUND;
+
+    sphere.AddComponent<Rigidbody>(0.5f, 0.3f, 30.0f, 0.98f, 0.98f);
     Rigidbody *sphereRb = sphere.GetComponent<Rigidbody>();
     sphereRb->m_invInertiaTensor =
         Rigidbody::createSphereInverseInertiaTensor(10.0f, 2.0f);
@@ -176,7 +193,10 @@ void BaseScene::generatePitch(glm::vec2 pitchSize, glm::vec2 groundAdd,
                                       pitchSize.x + groundAdd.y),
                             glm::vec3(0.2f, 0.5f, 0.2f))),
         defaultShader);
-    ground.AddComponent<HalfspaceCollider>(glm::vec3(0.0f, 1.0f, 0.0f), 0.0f);
+    HalfspaceCollider &groundCol = ground.AddComponent<HalfspaceCollider>(
+        glm::vec3(0.0f, 1.0f, 0.0f), 0.0f);
+    groundCol.m_layer = CAT_GROUND;
+    groundCol.m_mask = CAT_PLAYER | CAT_ENEMY | CAT_BALL;
 
     std::shared_ptr<Model> bannerModelA =
         std::make_shared<Model>("assets/models/baner1.obj");
@@ -199,8 +219,13 @@ void BaseScene::generatePitch(glm::vec2 pitchSize, glm::vec2 groundAdd,
             bannerModelA, defaultShader,
             glm::vec3(0.0f, wallHeight / 2.0f, 0.0f));
         if (i == 0)
-            wallA.AddComponent<HalfspaceCollider>(glm::vec3(0.0f, 0.0f, -1.0f),
-                                                  -pitchSize.x / 2.0f);
+        {
+
+            HalfspaceCollider &wallCol = wallA.AddComponent<HalfspaceCollider>(
+                glm::vec3(0.0f, 0.0f, -1.0f), -pitchSize.x / 2.0f);
+            wallCol.m_layer = CAT_GROUND;
+            wallCol.m_mask = CAT_BALL | CAT_PLAYER | CAT_ENEMY;
+        }
 
         // bottom
         Entity &wallB = createEntity();
@@ -216,8 +241,12 @@ void BaseScene::generatePitch(glm::vec2 pitchSize, glm::vec2 groundAdd,
             bannerModelA, defaultShader,
             glm::vec3(0.0f, wallHeight / 2.0f, 0.0f));
         if (i == 0)
-            wallB.AddComponent<HalfspaceCollider>(glm::vec3(0.0f, 0.0f, 1.0f),
-                                                  -pitchSize.x / 2.0f);
+        {
+            HalfspaceCollider &wallCol = wallB.AddComponent<HalfspaceCollider>(
+                glm::vec3(0.0f, 0.0f, 1.0f), -pitchSize.x / 2.0f);
+            wallCol.m_layer = CAT_GROUND;
+            wallCol.m_mask = CAT_BALL | CAT_PLAYER | CAT_ENEMY;
+        }
     }
 
     for (size_t i = 0; i < bannerCount.x; i++)
@@ -236,8 +265,12 @@ void BaseScene::generatePitch(glm::vec2 pitchSize, glm::vec2 groundAdd,
             bannerModelA, defaultShader,
             glm::vec3(0.0f, wallHeight / 2.0f, 0.0f));
         if (i == 0)
-            wallA.AddComponent<HalfspaceCollider>(glm::vec3(-1.0f, 0.0f, 0.0f),
-                                                  -pitchSize.y / 2.0f);
+        {
+            HalfspaceCollider &wallCol = wallA.AddComponent<HalfspaceCollider>(
+                glm::vec3(-1.0f, 0.0f, 0.0f), -pitchSize.y / 2.0f);
+            wallCol.m_layer = CAT_GROUND;
+            wallCol.m_mask = CAT_BALL | CAT_PLAYER | CAT_ENEMY;
+        }
 
         // right
         Entity &wallB = createEntity();
@@ -253,8 +286,12 @@ void BaseScene::generatePitch(glm::vec2 pitchSize, glm::vec2 groundAdd,
             bannerModelA, defaultShader,
             glm::vec3(0.0f, wallHeight / 2.0f, 0.0f));
         if (i == 0)
-            wallB.AddComponent<HalfspaceCollider>(glm::vec3(1.0f, 0.0f, 0.0f),
-                                                  -pitchSize.y / 2.0f);
+        {
+            HalfspaceCollider &wallCol = wallB.AddComponent<HalfspaceCollider>(
+                glm::vec3(1.0f, 0.0f, 0.0f), -pitchSize.y / 2.0f);
+            wallCol.m_layer = CAT_GROUND;
+            wallCol.m_mask = CAT_BALL | CAT_PLAYER | CAT_ENEMY;
+        }
     }
 }
 
@@ -275,8 +312,10 @@ void BaseScene::generateGates(glm::vec2 pitchSize, glm::vec3 gateSize,
                     glm::vec3(gateThickness, gateSize.y, gateThickness),
                     glm::vec3(0.8f, 0.8f, 0.8f))),
                 defaultShader);
-            bar.AddComponent<BoxCollider>(
+            BoxCollider &boxCol = bar.AddComponent<BoxCollider>(
                 glm::vec3(gateThickness, gateSize.y / 2.0f, gateThickness));
+            boxCol.m_layer = CAT_GROUND;
+            boxCol.m_mask = CAT_BALL | CAT_PLAYER | CAT_ENEMY;
         }
     }
 
@@ -293,7 +332,9 @@ void BaseScene::generateGates(glm::vec2 pitchSize, glm::vec3 gateSize,
                           gateThickness),
                 glm::vec3(0.8f, 0.8f, 0.8f))),
             defaultShader);
-        topBar.AddComponent<BoxCollider>(
+        BoxCollider &boxCol = topBar.AddComponent<BoxCollider>(
             glm::vec3(gateThickness, gateSize.x / 2.0f, gateThickness));
+        boxCol.m_layer = CAT_GROUND;
+        boxCol.m_mask = CAT_BALL | CAT_PLAYER | CAT_ENEMY;
     }
 }

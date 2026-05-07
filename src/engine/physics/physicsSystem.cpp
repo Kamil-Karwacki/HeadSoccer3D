@@ -503,9 +503,6 @@ void PhysicsSystem::generateContacts(
             Entity *entityB = entities[j].get();
             Rigidbody *rbB = entityB->GetComponent<Rigidbody>();
 
-            if (!rbA && !rbB)
-                continue;
-
             std::vector<Collider *> collidersB =
                 entityB->GetComponents<Collider>();
             if (collidersB.empty())
@@ -515,6 +512,11 @@ void PhysicsSystem::generateContacts(
             {
                 for (Collider *colB : collidersB)
                 {
+                    bool aHitsB = (colA->m_mask & colB->m_layer) != 0;
+                    bool bHitsA = (colB->m_mask & colA->m_layer) != 0;
+                    if (!aHitsB || !bHitsA)
+                        continue;
+
                     if (colA->m_type == ColliderType::Sphere &&
                         colB->m_type == ColliderType::Sphere)
                     {
