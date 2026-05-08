@@ -26,7 +26,8 @@ Application::Application() : m_isRunning(true)
     m_inputManager->bindAction("back", GLFW_KEY_S);
     m_inputManager->bindAction("left", GLFW_KEY_A);
     m_inputManager->bindAction("right", GLFW_KEY_D);
-    m_inputManager->bindAction("space", GLFW_KEY_SPACE);
+    m_inputManager->bindAction("shoot", GLFW_KEY_LEFT_CONTROL);
+    m_inputManager->bindAction("jump", GLFW_KEY_SPACE);
     loadShader("default", "assets/shaders/default.vert",
                "assets/shaders/default.frag");
     loadShader("light", "assets/shaders/light.vert",
