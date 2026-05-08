@@ -25,7 +25,8 @@ This project serves as a practical implementation of low-level game engine syste
 
 ## Controls (Testing environment)
 * `W`, `A`, `S`, `D` - Move
-* `Space` - Kick
+* `Space` - Jump
+* `Left ctrl` - Shoot
 * `Mouse` - Look around
   
 ## Build Instructions
