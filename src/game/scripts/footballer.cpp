@@ -45,9 +45,8 @@ void Footballer::kickLoop()
     InputManager manager = app.GetInput();
 
     glm::vec3 front = transform->getFront();
-    front.y *= -1.5f;
-    glm::vec3 kickDir = glm::normalize((ballTrans->getPosition() + front) -
-                                       transform->getPosition());
+    glm::vec3 kickDir = -front;
+    front.y *= -1.2f;
     float distToBall =
         glm::distance(transform->getPosition(), ballTrans->getPosition());
     float kickModifier = 8.0f / pow(distToBall, 1.5f);

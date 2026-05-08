@@ -24,7 +24,7 @@ class Footballer : public Behaviour
     void kickLoop();
     bool m_shouldKick = false;
     Ball *m_ball = nullptr;
-    float m_kickStrength = 200.0f;
+    float m_kickStrength = 170.0f;
     float m_speed = 250.0f;
-    float m_jumpHeight = 100.0f;
+    float m_jumpHeight = 110.0f;
 };
